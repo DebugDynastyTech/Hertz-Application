@@ -31,6 +31,8 @@ export default function Drafts() {
   const [activeTab, setActiveTab] = useState<ReportTab>("pending");
   const [uploadingIndex, setUploadingIndex] = useState<number | null>(null);
 
+  const [uploadedIndexes, setUploadedIndexes] = useState<number[]>([]);
+
   const loadData = async () => {
     const [draftData, uploadedData] = await Promise.all([
       getDrafts(),
@@ -69,6 +71,8 @@ export default function Drafts() {
         uploadedAt: new Date().toISOString(),
         serverId: result?.id,
       });
+
+      setUploadedIndexes((prev) => [...prev, index]);
 
       await deleteDraft(index);
       await loadData();
@@ -275,7 +279,10 @@ export default function Drafts() {
                   <TouchableOpacity
                     style={s.uploadBtn}
                     onPress={() => handleUpload(item, index)}
-                    disabled={uploadingIndex === index}
+                    disabled={
+                      uploadingIndex === index ||
+                      uploadedIndexes.includes(index)
+                    }
                     activeOpacity={0.85}
                   >
                     <LinearGradient
@@ -294,7 +301,16 @@ export default function Drafts() {
                         />
                       )}
                       <Text style={s.uploadBtnText}>
-                        {uploadingIndex === index ? "Uploading…" : "Upload"}
+                        {
+                          
+                          uploadedIndexes.includes(index)
+                            ? "Uploaded"
+                            : 
+                              uploadingIndex === index
+                              ? "Uploading…"
+                              : 
+                                "Upload"
+                        }
                       </Text>
                     </LinearGradient>
                   </TouchableOpacity>
