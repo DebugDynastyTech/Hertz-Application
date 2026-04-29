@@ -684,66 +684,177 @@ export default function DataEntry() {
       <AppModal m={modal} onClose={closeModal} />
 
       {pendingWatermark && (
-        <StampView uri={pendingWatermark.uri} stampRef={stampRef} watermark={pendingWatermark.watermark} photoWidth={pendingWatermark.photoWidth} photoHeight={pendingWatermark.photoHeight} />
+        <StampView
+          uri={pendingWatermark.uri}
+          stampRef={stampRef}
+          watermark={pendingWatermark.watermark}
+          photoWidth={pendingWatermark.photoWidth}
+          photoHeight={pendingWatermark.photoHeight}
+        />
       )}
 
-      <LinearGradient colors={["#0A1628", "#0F3D2E"]} style={styles.pageHeader} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }}>
+      <LinearGradient
+        colors={["#0A1628", "#0F3D2E"]}
+        style={styles.pageHeader}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 1 }}
+      >
         <View style={styles.headerOrb} />
         {isEditMode && (
-          <TouchableOpacity style={styles.backBtn} onPress={() => { performAutoSave().then(() => router.back()); }}>
+          <TouchableOpacity
+            style={styles.backBtn}
+            onPress={() => {
+              performAutoSave().then(() => router.back());
+            }}
+          >
             <MaterialCommunityIcons name="arrow-left" size={20} color="#fff" />
           </TouchableOpacity>
         )}
-        <Text style={styles.pageTitle}>{isEditMode ? "Edit Draft" : "New Entry"}</Text>
-        <Text style={styles.pageSubtitle}>{isEditMode ? `Editing #${draftData?.referenceId || "—"}` : "Forest Monitoring Survey"}</Text>
-        <Pressable style={styles.refreshBtn} onPress={() => loadMasters(true, false)} disabled={refreshing}>
-          <MaterialCommunityIcons name="refresh" size={15} color={refreshing ? "rgba(255,255,255,0.35)" : "#22C55E"} />
-          <Text style={[styles.refreshText, refreshing && { color: "rgba(255,255,255,0.35)" }]}>
+        <Text style={styles.pageTitle}>
+          {isEditMode ? "Edit Draft" : "New Entry"}
+        </Text>
+        <Text style={styles.pageSubtitle}>
+          {isEditMode
+            ? `Editing #${draftData?.referenceId || "—"}`
+            : "Forest Monitoring Survey"}
+        </Text>
+        <Pressable
+          style={styles.refreshBtn}
+          onPress={() => loadMasters(true, false)}
+          disabled={refreshing}
+        >
+          <MaterialCommunityIcons
+            name="refresh"
+            size={15}
+            color={refreshing ? "rgba(255,255,255,0.35)" : "#22C55E"}
+          />
+          <Text
+            style={[
+              styles.refreshText,
+              refreshing && { color: "rgba(255,255,255,0.35)" },
+            ]}
+          >
             {refreshing ? "Refreshing..." : "Refresh Data"}
           </Text>
         </Pressable>
       </LinearGradient>
 
-      <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === "ios" ? "padding" : "height"}>
-        <ScrollView style={{ flex: 1 }} contentContainerStyle={styles.scroll} keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>
-
+      <KeyboardAvoidingView
+        style={{ flex: 1 }}
+        behavior={Platform.OS === "ios" ? "padding" : "height"}
+      >
+        <ScrollView
+          style={{ flex: 1 }}
+          contentContainerStyle={styles.scroll}
+          keyboardShouldPersistTaps="handled"
+          showsVerticalScrollIndicator={false}
+        >
           {/* Basic Info */}
           <View style={styles.card}>
-            <SectionHeader icon="information-outline" title="Basic Information" />
+            <SectionHeader
+              icon="information-outline"
+              title="Basic Information"
+            />
             <View style={styles.cardBody}>
-              <Text style={styles.label}>Reference ID <Text style={styles.req}>*</Text></Text>
-              <InputField value={referenceId} onChangeText={(t) => { setReferenceId(t.replace(/\s/g, "")); setRefError(""); }} placeholder="Enter Reference ID" error={refError} />
-              <Text style={styles.label}>Date of Monitoring <Text style={styles.req}>*</Text></Text>
+              <Text style={styles.label}>
+                Reference ID <Text style={styles.req}>*</Text>
+              </Text>
+              <InputField
+                value={referenceId}
+                onChangeText={(t) => {
+                  setReferenceId(t.replace(/\s+/g, "_"));
+                  setRefError("");
+                }}
+                placeholder="Enter Reference ID"
+                error={refError}
+              />
+              <Text style={styles.label}>
+                Date of Monitoring <Text style={styles.req}>*</Text>
+              </Text>
               <Pressable onPress={() => setShowDatePicker(true)}>
-                <View style={[styles.dateField, dateError ? styles.fieldErr : null]}>
-                  <MaterialCommunityIcons name="calendar-outline" size={18} color={date ? T.primary : "#9CA3AF"} />
-                  <Text style={{ fontSize: 14, color: date ? "#111827" : "#9CA3AF", marginLeft: 8 }}>{date || "Select date..."}</Text>
+                <View
+                  style={[styles.dateField, dateError ? styles.fieldErr : null]}
+                >
+                  <MaterialCommunityIcons
+                    name="calendar-outline"
+                    size={18}
+                    color={date ? T.primary : "#9CA3AF"}
+                  />
+                  <Text
+                    style={{
+                      fontSize: 14,
+                      color: date ? "#111827" : "#9CA3AF",
+                      marginLeft: 8,
+                    }}
+                  >
+                    {date || "Select date..."}
+                  </Text>
                 </View>
               </Pressable>
-              {dateError ? <Text style={styles.errTxt}>{dateError}</Text> : null}
+              {dateError ? (
+                <Text style={styles.errTxt}>{dateError}</Text>
+              ) : null}
               {showDatePicker && (
-                <DateTimePicker value={pickerDate} mode="date" display="default" onChange={onChangeDate} maximumDate={new Date()} />
+                <DateTimePicker
+                  value={pickerDate}
+                  mode="date"
+                  display="default"
+                  onChange={onChangeDate}
+                  maximumDate={new Date()}
+                />
               )}
-              <Text style={[styles.label, { marginTop: 6 }]}>Village <Text style={styles.req}>*</Text></Text>
-              <View style={[styles.pickerWrap, villageError ? styles.fieldErr : null]}>
-                <Picker selectedValue={village} onValueChange={(v) => { setVillage(v); setVillageError(""); }} style={styles.picker}>
-                  <Picker.Item label="Select village..." value="" color="#9CA3AF" />
-                  {villages.filter((item) => item != null).map((item, i) => {
-                    const v = (item.name ?? item ?? "").toString();
-                    if (!v) return null;
-                    return <Picker.Item key={i} label={v} value={v} />;
-                  })}
+              <Text style={[styles.label, { marginTop: 6 }]}>
+                Village <Text style={styles.req}>*</Text>
+              </Text>
+              <View
+                style={[
+                  styles.pickerWrap,
+                  villageError ? styles.fieldErr : null,
+                ]}
+              >
+                <Picker
+                  selectedValue={village}
+                  onValueChange={(v) => {
+                    setVillage(v);
+                    setVillageError("");
+                  }}
+                  style={styles.picker}
+                >
+                  <Picker.Item
+                    label="Select village..."
+                    value=""
+                    color="#9CA3AF"
+                  />
+                  {villages
+                    .filter((item) => item != null)
+                    .map((item, i) => {
+                      const v = (item.name ?? item ?? "").toString();
+                      if (!v) return null;
+                      return <Picker.Item key={i} label={v} value={v} />;
+                    })}
                 </Picker>
               </View>
-              {villageError ? <Text style={styles.errTxt}>{villageError}</Text> : null}
+              {villageError ? (
+                <Text style={styles.errTxt}>{villageError}</Text>
+              ) : null}
               <View style={styles.twoCol}>
                 <View style={{ flex: 1 }}>
                   <Text style={styles.label}>No. of Rows</Text>
-                  <InputField value={numberOfRows} onChangeText={setNumberOfRows} keyboardType="numeric" placeholder="0" />
+                  <InputField
+                    value={numberOfRows}
+                    onChangeText={setNumberOfRows}
+                    keyboardType="numeric"
+                    placeholder="0"
+                  />
                 </View>
                 <View style={{ flex: 1 }}>
                   <Text style={styles.label}>Plants per Row</Text>
-                  <InputField value={plantsPerRow} onChangeText={setPlantsPerRow} keyboardType="numeric" placeholder="0" />
+                  <InputField
+                    value={plantsPerRow}
+                    onChangeText={setPlantsPerRow}
+                    keyboardType="numeric"
+                    placeholder="0"
+                  />
                 </View>
               </View>
             </View>
@@ -754,15 +865,51 @@ export default function DataEntry() {
             <SectionHeader icon="leaf" title="Species" />
             <View style={styles.cardBody}>
               {speciesRows.map((row, i) => (
-                <SpeciesRow key={i} speciesList={speciesList} species={row.species} planted={row.planted} survival={row.survival} height={row.height}
-                  onSpeciesChange={(v)  => { setSpeciesRows((p) => p.map((r, idx) => idx === i ? { ...r, species:  v } : r)); }}
-                  onPlantedChange={(v)  => { setSpeciesRows((p) => p.map((r, idx) => idx === i ? { ...r, planted:  v } : r)); }}
-                  onSurvivalChange={(v) => { setSpeciesRows((p) => p.map((r, idx) => idx === i ? { ...r, survival: v } : r)); }}
-                  onHeightChange={(v)   => { setSpeciesRows((p) => p.map((r, idx) => idx === i ? { ...r, height:   v } : r)); }}
-                  onDelete={() => speciesRows.length > 1 && setSpeciesRows(speciesRows.filter((_, idx) => idx !== i))}
+                <SpeciesRow
+                  key={i}
+                  speciesList={speciesList}
+                  species={row.species}
+                  planted={row.planted}
+                  survival={row.survival}
+                  height={row.height}
+                  onSpeciesChange={(v) => {
+                    setSpeciesRows((p) =>
+                      p.map((r, idx) => (idx === i ? { ...r, species: v } : r)),
+                    );
+                  }}
+                  onPlantedChange={(v) => {
+                    setSpeciesRows((p) =>
+                      p.map((r, idx) => (idx === i ? { ...r, planted: v } : r)),
+                    );
+                  }}
+                  onSurvivalChange={(v) => {
+                    setSpeciesRows((p) =>
+                      p.map((r, idx) =>
+                        idx === i ? { ...r, survival: v } : r,
+                      ),
+                    );
+                  }}
+                  onHeightChange={(v) => {
+                    setSpeciesRows((p) =>
+                      p.map((r, idx) => (idx === i ? { ...r, height: v } : r)),
+                    );
+                  }}
+                  onDelete={() =>
+                    speciesRows.length > 1 &&
+                    setSpeciesRows(speciesRows.filter((_, idx) => idx !== i))
+                  }
                 />
               ))}
-              <PrimaryButton title="+ Add Species Row" variant="outline" onPress={() => setSpeciesRows([...speciesRows, { species: "", planted: "", survival: "", height: "" }])} />
+              <PrimaryButton
+                title="+ Add Species Row"
+                variant="outline"
+                onPress={() =>
+                  setSpeciesRows([
+                    ...speciesRows,
+                    { species: "", planted: "", survival: "", height: "" },
+                  ])
+                }
+              />
             </View>
           </View>
 
@@ -771,19 +918,50 @@ export default function DataEntry() {
             <SectionHeader icon="shield-outline" title="Protection Wall" />
             <View style={styles.cardBody}>
               {protectionRows.map((row, i) => (
-                <ProtectionWallRow key={i} wallList={protectionWallList} wallType={row.wallType} rmt={row.rmt}
-                  onWallChange={(v) => { setProtectionRows((p) => p.map((r, idx) => idx === i ? { ...r, wallType: v } : r)); }}
-                  onRmtChange={(v)  => { setProtectionRows((p) => p.map((r, idx) => idx === i ? { ...r, rmt:      v } : r)); }}
-                  onDelete={() => protectionRows.length > 1 && setProtectionRows(protectionRows.filter((_, idx) => idx !== i))}
+                <ProtectionWallRow
+                  key={i}
+                  wallList={protectionWallList}
+                  wallType={row.wallType}
+                  rmt={row.rmt}
+                  onWallChange={(v) => {
+                    setProtectionRows((p) =>
+                      p.map((r, idx) =>
+                        idx === i ? { ...r, wallType: v } : r,
+                      ),
+                    );
+                  }}
+                  onRmtChange={(v) => {
+                    setProtectionRows((p) =>
+                      p.map((r, idx) => (idx === i ? { ...r, rmt: v } : r)),
+                    );
+                  }}
+                  onDelete={() =>
+                    protectionRows.length > 1 &&
+                    setProtectionRows(
+                      protectionRows.filter((_, idx) => idx !== i),
+                    )
+                  }
                 />
               ))}
-              <PrimaryButton title="+ Add Wall Row" variant="outline" onPress={() => setProtectionRows([...protectionRows, { wallType: "", rmt: "" }])} />
+              <PrimaryButton
+                title="+ Add Wall Row"
+                variant="outline"
+                onPress={() =>
+                  setProtectionRows([
+                    ...protectionRows,
+                    { wallType: "", rmt: "" },
+                  ])
+                }
+              />
             </View>
           </View>
 
           {/* Water Facility */}
           <View style={styles.card}>
-            <WaterFacilitySection value={waterFacility} onChangeText={setWaterFacility} />
+            <WaterFacilitySection
+              value={waterFacility}
+              onChangeText={setWaterFacility}
+            />
           </View>
 
           {/* Natural Species */}
@@ -791,15 +969,53 @@ export default function DataEntry() {
             <SectionHeader icon="grain" title="Natural Species" />
             <View style={styles.cardBody}>
               {naturalspeciesRows.map((row, i) => (
-                <NaturalSpeciesRow key={i} naturalspeciesList={naturalspeciesList} naturalspecies={row.species} planted={row.planted} survival={row.survival} height={row.height}
-                  onSpeciesChange={(v)  => { setNaturalspeciesRows((p) => p.map((r, idx) => idx === i ? { ...r, species:  v } : r)); }}
-                  onPlantedChange={(v)  => { setNaturalspeciesRows((p) => p.map((r, idx) => idx === i ? { ...r, planted:  v } : r)); }}
-                  onSurvivalChange={(v) => { setNaturalspeciesRows((p) => p.map((r, idx) => idx === i ? { ...r, survival: v } : r)); }}
-                  onHeightChange={(v)   => { setNaturalspeciesRows((p) => p.map((r, idx) => idx === i ? { ...r, height:   v } : r)); }}
-                  onDelete={() => naturalspeciesRows.length > 1 && setNaturalspeciesRows(naturalspeciesRows.filter((_, idx) => idx !== i))}
+                <NaturalSpeciesRow
+                  key={i}
+                  naturalspeciesList={naturalspeciesList}
+                  naturalspecies={row.species}
+                  planted={row.planted}
+                  survival={row.survival}
+                  height={row.height}
+                  onSpeciesChange={(v) => {
+                    setNaturalspeciesRows((p) =>
+                      p.map((r, idx) => (idx === i ? { ...r, species: v } : r)),
+                    );
+                  }}
+                  onPlantedChange={(v) => {
+                    setNaturalspeciesRows((p) =>
+                      p.map((r, idx) => (idx === i ? { ...r, planted: v } : r)),
+                    );
+                  }}
+                  onSurvivalChange={(v) => {
+                    setNaturalspeciesRows((p) =>
+                      p.map((r, idx) =>
+                        idx === i ? { ...r, survival: v } : r,
+                      ),
+                    );
+                  }}
+                  onHeightChange={(v) => {
+                    setNaturalspeciesRows((p) =>
+                      p.map((r, idx) => (idx === i ? { ...r, height: v } : r)),
+                    );
+                  }}
+                  onDelete={() =>
+                    naturalspeciesRows.length > 1 &&
+                    setNaturalspeciesRows(
+                      naturalspeciesRows.filter((_, idx) => idx !== i),
+                    )
+                  }
                 />
               ))}
-              <PrimaryButton title="+ Add Natural Species" variant="outline" onPress={() => setNaturalspeciesRows([...naturalspeciesRows, { species: "", planted: "", survival: "", height: "" }])} />
+              <PrimaryButton
+                title="+ Add Natural Species"
+                variant="outline"
+                onPress={() =>
+                  setNaturalspeciesRows([
+                    ...naturalspeciesRows,
+                    { species: "", planted: "", survival: "", height: "" },
+                  ])
+                }
+              />
             </View>
           </View>
 
@@ -808,13 +1024,23 @@ export default function DataEntry() {
             <SectionHeader icon="alert-circle-outline" title="Reason" />
             <View style={styles.cardBody}>
               <View style={styles.pickerWrap}>
-                <Picker selectedValue={reason} onValueChange={setReason} style={styles.picker}>
-                  <Picker.Item label="Select reason..." value="" color="#9CA3AF" />
-                  {reasonList.filter((item) => item != null).map((item, i) => {
-                    const v = (item.name ?? item ?? "").toString();
-                    if (!v) return null;
-                    return <Picker.Item key={i} label={v} value={v} />;
-                  })}
+                <Picker
+                  selectedValue={reason}
+                  onValueChange={setReason}
+                  style={styles.picker}
+                >
+                  <Picker.Item
+                    label="Select reason..."
+                    value=""
+                    color="#9CA3AF"
+                  />
+                  {reasonList
+                    .filter((item) => item != null)
+                    .map((item, i) => {
+                      const v = (item.name ?? item ?? "").toString();
+                      if (!v) return null;
+                      return <Picker.Item key={i} label={v} value={v} />;
+                    })}
                 </Picker>
               </View>
             </View>
@@ -825,13 +1051,25 @@ export default function DataEntry() {
             <SectionHeader icon="map-marker" title="Locations" />
             <View style={styles.cardBody}>
               {locations.map((loc, i) => (
-                <LocationRow key={i} index={i} latitude={loc.latitude} longitude={loc.longitude}
-                  onLatitudeChange={(v)  => updateLocation(i, { latitude: v })}
+                <LocationRow
+                  key={i}
+                  index={i}
+                  latitude={loc.latitude}
+                  longitude={loc.longitude}
+                  onLatitudeChange={(v) => updateLocation(i, { latitude: v })}
                   onLongitudeChange={(v) => updateLocation(i, { longitude: v })}
-                  onDelete={() => setLocations((prev) => prev.filter((_, idx) => idx !== i))}
+                  onDelete={() =>
+                    setLocations((prev) => prev.filter((_, idx) => idx !== i))
+                  }
                 />
               ))}
-              <PrimaryButton title="+ Add Location" variant="outline" onPress={() => setLocations([...locations, { latitude: "", longitude: "" }])} />
+              <PrimaryButton
+                title="+ Add Location"
+                variant="outline"
+                onPress={() =>
+                  setLocations([...locations, { latitude: "", longitude: "" }])
+                }
+              />
             </View>
           </View>
 
@@ -840,19 +1078,32 @@ export default function DataEntry() {
             <SectionHeader icon="image-outline" title="Images with Location" />
             <View style={styles.cardBody}>
               {imageLocations.length === 0 && !liveGps && (
-                <Text style={{ color: "#9CA3AF", marginBottom: 12 }}>No images added yet.</Text>
+                <Text style={{ color: "#9CA3AF", marginBottom: 12 }}>
+                  No images added yet.
+                </Text>
               )}
               {imageLocations.map((entry, i) => (
-                <LocationImageRow key={i} entry={entry} index={i}
-                  onLatChange={(v)     => updateImageLocation(i, { latitude: v })}
-                  onLngChange={(v)     => updateImageLocation(i, { longitude: v })}
-                  onImageChange={(img) => updateImageLocation(i, { image: img })}
-                  onDelete={() => setImageLocations((prev) => prev.filter((_, idx) => idx !== i))}
+                <LocationImageRow
+                  key={i}
+                  entry={entry}
+                  index={i}
+                  onLatChange={(v) => updateImageLocation(i, { latitude: v })}
+                  onLngChange={(v) => updateImageLocation(i, { longitude: v })}
+                  onImageChange={(img) =>
+                    updateImageLocation(i, { image: img })
+                  }
+                  onDelete={() =>
+                    setImageLocations((prev) =>
+                      prev.filter((_, idx) => idx !== i),
+                    )
+                  }
                 />
               ))}
               {!liveGps && (
                 <PrimaryButton
-                  title={addingImage ? "Processing..." : "+ Add Image & Location"}
+                  title={
+                    addingImage ? "Processing..." : "+ Add Image & Location"
+                  }
                   variant="outline"
                   onPress={handleAddImageLocation}
                   disabled={addingImage}
@@ -875,7 +1126,10 @@ export default function DataEntry() {
 
           {/* Save as Draft */}
           <View style={styles.submitCard}>
-            <PrimaryButton title={isEditMode ? "Update Draft" : "Save as Draft"} onPress={handleSaveDraft} />
+            <PrimaryButton
+              title={isEditMode ? "Update Draft" : "Save as Draft"}
+              onPress={handleSaveDraft}
+            />
           </View>
 
           <View style={{ height: 32 }} />
