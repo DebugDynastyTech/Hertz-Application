@@ -21,6 +21,14 @@ export interface WatermarkData {
  * 3. Return the captured URI
  */
 
+function splitText(text: string, chunkSize = 25) {
+  const result = [];
+  for (let i = 0; i < text.length; i += chunkSize) {
+    result.push(text.slice(i, i + chunkSize));
+  }
+  return result;
+}
+
 // Format timestamp to readable string
 export function formatStampTime(isoString: string): string {
   try {
@@ -37,7 +45,10 @@ export function formatStampTime(isoString: string): string {
 // Build stamp lines
 export function buildStampLines(data: WatermarkData): string[] {
   const lines: string[] = [];
-  if (data.referenceId) lines.push(`Ref_id: ${data.referenceId}`);
+  if (data.referenceId) {
+    lines.push("Ref ID:");
+    lines.push(...splitText(data.referenceId));
+  }
   lines.push(`Lat: ${data.latitude}`);
   lines.push(`Lon: ${data.longitude}`);
   lines.push(`Time: ${formatStampTime(data.timestamp)}`);

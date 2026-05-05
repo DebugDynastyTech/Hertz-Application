@@ -62,23 +62,33 @@ function openSettings(permissionName: string) {
     [
       { text: "Cancel", style: "cancel" },
       { text: "Open Settings", onPress: () => Linking.openSettings() },
-    ]
+    ],
   );
 }
 
 async function requestCameraPermission(): Promise<boolean> {
-  const { status, canAskAgain } = await ImagePicker.requestCameraPermissionsAsync();
+  const { status, canAskAgain } =
+    await ImagePicker.requestCameraPermissionsAsync();
   if (status === "granted") return true;
   if (!canAskAgain) openSettings("Camera");
-  else Alert.alert("Camera Permission Required", "Please allow camera access to capture photos.");
+  else
+    Alert.alert(
+      "Camera Permission Required",
+      "Please allow camera access to capture photos.",
+    );
   return false;
 }
 
 async function requestLocationPermission(): Promise<boolean> {
-  const { status, canAskAgain } = await Location.requestForegroundPermissionsAsync();
+  const { status, canAskAgain } =
+    await Location.requestForegroundPermissionsAsync();
   if (status === "granted") return true;
   if (!canAskAgain) openSettings("Location");
-  else Alert.alert("Location Permission Required", "Please allow location access to capture GPS coordinates.");
+  else
+    Alert.alert(
+      "Location Permission Required",
+      "Please allow location access to capture GPS coordinates.",
+    );
   return false;
 }
 
@@ -102,10 +112,30 @@ interface ModalState {
 }
 
 const MODAL_CFG = {
-  success: { icon: "check-circle",  color: "#16A34A", bg: "#F0FDF4", border: "#86EFAC" },
-  error:   { icon: "alert-circle",  color: "#DC2626", bg: "#FEF2F2", border: "#FCA5A5" },
-  warning: { icon: "alert",         color: "#D97706", bg: "#FFFBEB", border: "#FCD34D" },
-  info:    { icon: "information",   color: "#2563EB", bg: "#EFF6FF", border: "#BFDBFE" },
+  success: {
+    icon: "check-circle",
+    color: "#16A34A",
+    bg: "#F0FDF4",
+    border: "#86EFAC",
+  },
+  error: {
+    icon: "alert-circle",
+    color: "#DC2626",
+    bg: "#FEF2F2",
+    border: "#FCA5A5",
+  },
+  warning: {
+    icon: "alert",
+    color: "#D97706",
+    bg: "#FFFBEB",
+    border: "#FCD34D",
+  },
+  info: {
+    icon: "information",
+    color: "#2563EB",
+    bg: "#EFF6FF",
+    border: "#BFDBFE",
+  },
 };
 
 function AppModal({ m, onClose }: { m: ModalState; onClose: () => void }) {
@@ -113,21 +143,46 @@ function AppModal({ m, onClose }: { m: ModalState; onClose: () => void }) {
   return (
     <Modal visible={m.visible} transparent animationType="fade">
       <View style={ms.overlay}>
-        <View style={[ms.card, { borderColor: cfg.border, backgroundColor: cfg.bg }]}>
+        <View
+          style={[
+            ms.card,
+            { borderColor: cfg.border, backgroundColor: cfg.bg },
+          ]}
+        >
           <View style={[ms.icon, { backgroundColor: `${cfg.color}15` }]}>
-            <MaterialCommunityIcons name={cfg.icon as any} size={36} color={cfg.color} />
+            <MaterialCommunityIcons
+              name={cfg.icon as any}
+              size={36}
+              color={cfg.color}
+            />
           </View>
           <Text style={[ms.title, { color: cfg.color }]}>{m.title}</Text>
           {m.message ? <Text style={ms.msg}>{m.message}</Text> : null}
           <View style={ms.actions}>
             {m.onCancel && (
-              <TouchableOpacity style={[ms.btn, ms.cancelBtn]} onPress={() => { m.onCancel?.(); onClose(); }}>
+              <TouchableOpacity
+                style={[ms.btn, ms.cancelBtn]}
+                onPress={() => {
+                  m.onCancel?.();
+                  onClose();
+                }}
+              >
                 <Text style={ms.cancelTxt}>{m.cancelText || "Cancel"}</Text>
               </TouchableOpacity>
             )}
             <TouchableOpacity
-              style={[ms.btn, { backgroundColor: cfg.color, flex: m.onCancel ? 1 : undefined, minWidth: 120 }]}
-              onPress={() => { m.onConfirm?.(); onClose(); }}
+              style={[
+                ms.btn,
+                {
+                  backgroundColor: cfg.color,
+                  flex: m.onCancel ? 1 : undefined,
+                  minWidth: 120,
+                },
+              ]}
+              onPress={() => {
+                m.onConfirm?.();
+                onClose();
+              }}
             >
               <Text style={ms.confirmTxt}>{m.confirmText || "OK"}</Text>
             </TouchableOpacity>
@@ -139,15 +194,56 @@ function AppModal({ m, onClose }: { m: ModalState; onClose: () => void }) {
 }
 
 const ms = StyleSheet.create({
-  overlay:    { flex: 1, backgroundColor: "rgba(0,0,0,0.5)", justifyContent: "center", alignItems: "center", padding: 32 },
-  card:       { width: "100%", borderRadius: 24, padding: 24, borderWidth: 1.5, alignItems: "center", elevation: 10 },
-  icon:       { width: 72, height: 72, borderRadius: 36, justifyContent: "center", alignItems: "center", marginBottom: 16 },
-  title:      { fontSize: 18, fontWeight: "800", textAlign: "center", marginBottom: 8 },
-  msg:        { fontSize: 14, color: "#4B5563", textAlign: "center", lineHeight: 20, marginBottom: 20 },
-  actions:    { flexDirection: "row", gap: 10, width: "100%" },
-  btn:        { flex: 1, paddingVertical: 13, borderRadius: 12, alignItems: "center", justifyContent: "center" },
-  cancelBtn:  { backgroundColor: "#F3F4F6", borderWidth: 1, borderColor: "#E5E7EB" },
-  cancelTxt:  { color: "#374151", fontWeight: "700", fontSize: 14 },
+  overlay: {
+    flex: 1,
+    backgroundColor: "rgba(0,0,0,0.5)",
+    justifyContent: "center",
+    alignItems: "center",
+    padding: 32,
+  },
+  card: {
+    width: "100%",
+    borderRadius: 24,
+    padding: 24,
+    borderWidth: 1.5,
+    alignItems: "center",
+    elevation: 10,
+  },
+  icon: {
+    width: 72,
+    height: 72,
+    borderRadius: 36,
+    justifyContent: "center",
+    alignItems: "center",
+    marginBottom: 16,
+  },
+  title: {
+    fontSize: 18,
+    fontWeight: "800",
+    textAlign: "center",
+    marginBottom: 8,
+  },
+  msg: {
+    fontSize: 14,
+    color: "#4B5563",
+    textAlign: "center",
+    lineHeight: 20,
+    marginBottom: 20,
+  },
+  actions: { flexDirection: "row", gap: 10, width: "100%" },
+  btn: {
+    flex: 1,
+    paddingVertical: 13,
+    borderRadius: 12,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  cancelBtn: {
+    backgroundColor: "#F3F4F6",
+    borderWidth: 1,
+    borderColor: "#E5E7EB",
+  },
+  cancelTxt: { color: "#374151", fontWeight: "700", fontSize: 14 },
   confirmTxt: { color: "#fff", fontWeight: "700", fontSize: 14 },
 });
 
@@ -162,9 +258,25 @@ function SectionHeader({ icon, title }: { icon: any; title: string }) {
   );
 }
 const sh = StyleSheet.create({
-  wrap:     { flexDirection: "row", alignItems: "center", gap: 10, paddingVertical: 12, paddingHorizontal: 16, backgroundColor: "#F9FAFB", borderBottomWidth: 1, borderBottomColor: "#E5E7EB" },
-  iconWrap: { width: 30, height: 30, borderRadius: 9, backgroundColor: "#F0FDF4", justifyContent: "center", alignItems: "center" },
-  title:    { fontSize: 15, fontWeight: "700", color: "#111827" },
+  wrap: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 10,
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    backgroundColor: "#F9FAFB",
+    borderBottomWidth: 1,
+    borderBottomColor: "#E5E7EB",
+  },
+  iconWrap: {
+    width: 30,
+    height: 30,
+    borderRadius: 9,
+    backgroundColor: "#F0FDF4",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  title: { fontSize: 15, fontWeight: "700", color: "#111827" },
 });
 
 // ── Accuracy helpers ──────────────────────────────────────────────────────────
@@ -191,23 +303,42 @@ interface LiveGpsCardProps {
   confirming: boolean;
 }
 
-function LiveGpsCard({ photoUri, latitude, longitude, accuracy, onConfirm, confirming }: LiveGpsCardProps) {
+function LiveGpsCard({
+  photoUri,
+  latitude,
+  longitude,
+  accuracy,
+  onConfirm,
+  confirming,
+}: LiveGpsCardProps) {
   const color = getAccuracyColor(accuracy);
   const label = getAccuracyLabel(accuracy);
   return (
     <View style={gps.card}>
       <SectionHeader icon="crosshairs-gps" title="Live GPS — Select Location" />
       <View style={gps.body}>
-        <Image source={{ uri: photoUri }} style={gps.preview} resizeMode="cover" />
+        <Image
+          source={{ uri: photoUri }}
+          style={gps.preview}
+          resizeMode="cover"
+        />
         <View style={[gps.accuracyRow, { borderColor: color }]}>
           <View style={[gps.accuracyDot, { backgroundColor: color }]} />
           <View style={{ flex: 1 }}>
             <Text style={gps.accuracyLabel}>Accuracy</Text>
             <Text style={[gps.accuracyValue, { color }]}>
-              {accuracy !== null ? `±${accuracy.toFixed(1)} m — ${label}` : "Fetching GPS..."}
+              {accuracy !== null
+                ? `±${accuracy.toFixed(1)} m — ${label}`
+                : "Fetching GPS..."}
             </Text>
           </View>
-          <MaterialCommunityIcons name={accuracy !== null && accuracy <= 15 ? "check-circle" : "loading"} size={22} color={color} />
+          <MaterialCommunityIcons
+            name={
+              accuracy !== null && accuracy <= 15 ? "check-circle" : "loading"
+            }
+            size={22}
+            color={color}
+          />
         </View>
         <View style={gps.coordsRow}>
           <View style={gps.coordBox}>
@@ -226,13 +357,23 @@ function LiveGpsCard({ photoUri, latitude, longitude, accuracy, onConfirm, confi
             : "⏳ Waiting for better accuracy... or save now if acceptable."}
         </Text>
         <TouchableOpacity
-          style={[gps.confirmBtn, { backgroundColor: color }, confirming && { opacity: 0.7 }]}
+          style={[
+            gps.confirmBtn,
+            { backgroundColor: color },
+            confirming && { opacity: 0.7 },
+          ]}
           onPress={onConfirm}
           disabled={confirming || latitude === ""}
           activeOpacity={0.85}
         >
-          <MaterialCommunityIcons name="map-marker-check" size={18} color="#fff" />
-          <Text style={gps.confirmBtnText}>{confirming ? "Saving..." : "Use This Location"}</Text>
+          <MaterialCommunityIcons
+            name="map-marker-check"
+            size={18}
+            color="#fff"
+          />
+          <Text style={gps.confirmBtnText}>
+            {confirming ? "Saving..." : "Use This Location"}
+          </Text>
         </TouchableOpacity>
       </View>
     </View>
@@ -240,20 +381,64 @@ function LiveGpsCard({ photoUri, latitude, longitude, accuracy, onConfirm, confi
 }
 
 const gps = StyleSheet.create({
-  card:           { backgroundColor: "#fff", borderRadius: 18, overflow: "hidden", elevation: 2, shadowColor: "#000", shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.04, shadowRadius: 8 },
-  body:           { padding: 16, gap: 12 },
-  preview:        { width: "100%", height: 180, borderRadius: 12 },
-  accuracyRow:    { flexDirection: "row", alignItems: "center", gap: 10, padding: 12, borderRadius: 12, borderWidth: 1.5, backgroundColor: "#F9FAFB" },
-  accuracyDot:    { width: 10, height: 10, borderRadius: 5 },
-  accuracyLabel:  { fontSize: 11, color: "#6B7280", fontWeight: "600", textTransform: "uppercase", letterSpacing: 0.3 },
-  accuracyValue:  { fontSize: 15, fontWeight: "700", marginTop: 2 },
-  coordsRow:      { flexDirection: "row", backgroundColor: "#F9FAFB", borderRadius: 12, borderWidth: 1, borderColor: "#E5E7EB", overflow: "hidden" },
-  coordBox:       { flex: 1, padding: 12, alignItems: "center" },
-  coordDivider:   { width: 1, backgroundColor: "#E5E7EB" },
-  coordLabel:     { fontSize: 11, color: "#6B7280", fontWeight: "600", textTransform: "uppercase", letterSpacing: 0.3, marginBottom: 4 },
-  coordValue:     { fontSize: 13, color: "#111827", fontWeight: "700" },
-  hint:           { fontSize: 12, color: "#6B7280", textAlign: "center", lineHeight: 18 },
-  confirmBtn:     { flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 8, paddingVertical: 14, borderRadius: 12 },
+  card: {
+    backgroundColor: "#fff",
+    borderRadius: 18,
+    overflow: "hidden",
+    elevation: 2,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.04,
+    shadowRadius: 8,
+  },
+  body: { padding: 16, gap: 12 },
+  preview: { width: "100%", height: 180, borderRadius: 12 },
+  accuracyRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 10,
+    padding: 12,
+    borderRadius: 12,
+    borderWidth: 1.5,
+    backgroundColor: "#F9FAFB",
+  },
+  accuracyDot: { width: 10, height: 10, borderRadius: 5 },
+  accuracyLabel: {
+    fontSize: 11,
+    color: "#6B7280",
+    fontWeight: "600",
+    textTransform: "uppercase",
+    letterSpacing: 0.3,
+  },
+  accuracyValue: { fontSize: 15, fontWeight: "700", marginTop: 2 },
+  coordsRow: {
+    flexDirection: "row",
+    backgroundColor: "#F9FAFB",
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: "#E5E7EB",
+    overflow: "hidden",
+  },
+  coordBox: { flex: 1, padding: 12, alignItems: "center" },
+  coordDivider: { width: 1, backgroundColor: "#E5E7EB" },
+  coordLabel: {
+    fontSize: 11,
+    color: "#6B7280",
+    fontWeight: "600",
+    textTransform: "uppercase",
+    letterSpacing: 0.3,
+    marginBottom: 4,
+  },
+  coordValue: { fontSize: 13, color: "#111827", fontWeight: "700" },
+  hint: { fontSize: 12, color: "#6B7280", textAlign: "center", lineHeight: 18 },
+  confirmBtn: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 8,
+    paddingVertical: 14,
+    borderRadius: 12,
+  },
   confirmBtnText: { color: "#fff", fontWeight: "700", fontSize: 15 },
 });
 
@@ -267,36 +452,54 @@ function safeDateString(val: any): string {
     const d = new Date(val);
     if (isNaN(d.getTime())) return "";
     return d.toISOString().split("T")[0];
-  } catch { return ""; }
+  } catch {
+    return "";
+  }
 }
 function restoreImageLocations(draftData: any): LocationImageEntry[] {
-  if (Array.isArray(draftData?.imageLocations) && draftData.imageLocations.length > 0) {
+  if (
+    Array.isArray(draftData?.imageLocations) &&
+    draftData.imageLocations.length > 0
+  ) {
     return draftData.imageLocations.map((e: any) => ({
-      latitude:  e.latitude  ?? "",
+      latitude: e.latitude ?? "",
       longitude: e.longitude ?? "",
-      image:     e.image     ?? null,
+      image: e.image ?? null,
     }));
   }
   if (Array.isArray(draftData?.images) && draftData.images.length > 0) {
-    return draftData.images.map((img: any) => ({ latitude: "", longitude: "", image: img }));
+    return draftData.images.map((img: any) => ({
+      latitude: "",
+      longitude: "",
+      image: img,
+    }));
   }
   return [];
 }
 function populateFromDraft(draft: any) {
   return {
-    referenceId:        draft.referenceId              ?? "",
-    date:               safeDateString(draft.date),
-    numberOfRows:       draft.numberOfRows?.toString() ?? "",
-    plantsPerRow:       draft.plantsPerRow?.toString() ?? "",
-    village:            draft.village                  ?? "",
-    reason:             draft.reason                   ?? "",
-    waterFacility:      draft.waterFacility            ?? "",
-    speciesRows:        safeArray(draft.speciesRows).length ? safeArray(draft.speciesRows) : [{ species: "", planted: "", survival: "", height: "" }],
-    naturalspeciesRows: safeArray(draft.naturalspeciesRows).length ? safeArray(draft.naturalspeciesRows) : [{ species: "", planted: "", survival: "", height: "" }],
-    protectionRows:     safeArray(draft.protectionRows).length ? safeArray(draft.protectionRows) : [{ wallType: "", rmt: "" }],
-    locations:          safeArray(draft.locationRows).length
-                          ? safeArray(draft.locationRows).map((r: any) => ({ latitude: r.latitude ?? r.lat?.toString() ?? "", longitude: r.longitude ?? r.long?.toString() ?? "" }))
-                          : [{ latitude: "", longitude: "" }],
+    referenceId: draft.referenceId ?? "",
+    date: safeDateString(draft.date),
+    numberOfRows: draft.numberOfRows?.toString() ?? "",
+    plantsPerRow: draft.plantsPerRow?.toString() ?? "",
+    village: draft.village ?? "",
+    reason: draft.reason ?? "",
+    waterFacility: draft.waterFacility ?? "",
+    speciesRows: safeArray(draft.speciesRows).length
+      ? safeArray(draft.speciesRows)
+      : [{ species: "", planted: "", survival: "", height: "" }],
+    naturalspeciesRows: safeArray(draft.naturalspeciesRows).length
+      ? safeArray(draft.naturalspeciesRows)
+      : [{ species: "", planted: "", survival: "", height: "" }],
+    protectionRows: safeArray(draft.protectionRows).length
+      ? safeArray(draft.protectionRows)
+      : [{ wallType: "", rmt: "" }],
+    locations: safeArray(draft.locationRows).length
+      ? safeArray(draft.locationRows).map((r: any) => ({
+          latitude: r.latitude ?? r.lat?.toString() ?? "",
+          longitude: r.longitude ?? r.long?.toString() ?? "",
+        }))
+      : [{ latitude: "", longitude: "" }],
     imageLocations: restoreImageLocations(draft),
   };
 }
@@ -307,7 +510,7 @@ async function saveToGallery(uri: string): Promise<void> {
     const granted = await requestMediaPermission();
     if (!granted) return;
     await MediaLibrary.saveToLibraryAsync(uri);
-  } catch { }
+  } catch {}
 }
 
 // ── StampView ─────────────────────────────────────────────────────────────────
@@ -318,20 +521,63 @@ interface StampViewProps {
   photoWidth: number;
   photoHeight: number;
 }
-function StampView({ uri, stampRef, watermark, photoWidth, photoHeight }: StampViewProps) {
+function StampView({
+  uri,
+  stampRef,
+  watermark,
+  photoWidth,
+  photoHeight,
+}: StampViewProps) {
   // Use real photo dimensions to preserve landscape/portrait orientation
   const aspectRatio = photoHeight > 0 ? photoHeight / photoWidth : 1.33;
   const W = SCREEN_WIDTH;
   const H = Math.round(W * aspectRatio);
-  const lines    = buildStampLines(watermark);
+  const lines = buildStampLines(watermark);
   const fontSize = Math.max(13, Math.round(W * 0.032));
-  const pad      = Math.max(10, Math.round(W * 0.025));
+  const pad = Math.max(10, Math.round(W * 0.025));
   return (
-    <View ref={stampRef} style={{ position: "absolute", left: -99999, top: 0, width: W, height: H, backgroundColor: "#000" }} collapsable={false}>
-      <Image source={{ uri }} style={{ width: W, height: H, resizeMode: "cover" }} />
-      <View style={{ position: "absolute", bottom: pad, left: 0, backgroundColor: "rgba(0,0,0,0.6)", paddingHorizontal: pad, paddingVertical: Math.round(pad * 0.6), borderTopRightRadius: 6 }}>
+    <View
+      ref={stampRef}
+      style={{
+        position: "absolute",
+        left: -99999,
+        top: 0,
+        width: W,
+        height: H,
+        backgroundColor: "#000",
+      }}
+      collapsable={false}
+    >
+      <Image
+        source={{ uri }}
+        style={{ width: W, height: H, resizeMode: "cover" }}
+      />
+      <View
+        style={{
+          position: "absolute",
+          bottom: pad,
+          left: pad,
+          maxWidth: "75%", // 👈 LIMIT WIDTH
+          backgroundColor: "rgba(0,0,0,0.55)",
+          paddingHorizontal: pad,
+          paddingVertical: Math.round(pad * 0.7),
+          borderRadius: 10,
+          alignSelf: "flex-start",
+        }}
+      >
         {lines.map((line, i) => (
-          <Text key={i} style={{ color: "#fff", fontSize, fontWeight: "600", letterSpacing: 0.3, lineHeight: fontSize * 1.6 }}>{line}</Text>
+          <Text
+            key={i}
+            style={{
+              color: "#fff",
+              fontSize,
+              fontWeight: "600",
+              letterSpacing: 0.3,
+              lineHeight: fontSize * 1.6,
+            }}
+          >
+            {line}
+          </Text>
         ))}
       </View>
     </View>
@@ -343,94 +589,162 @@ const AUTO_SAVE_MARKER = "__autosave__";
 export default function DataEntry() {
   const router = useRouter();
 
-  const params     = useLocalSearchParams<{ editMode: string; draftIndex: string; }>();
+  const params = useLocalSearchParams<{
+    editMode: string;
+    draftIndex: string;
+  }>();
   const isEditMode = params.editMode === "true";
   const draftIndex = isEditMode ? Number(params.draftIndex) : -1;
 
-  const [draftData,   setDraftData]   = useState<any | null>(null);
+  const [draftData, setDraftData] = useState<any | null>(null);
   const [draftLoaded, setDraftLoaded] = useState(!isEditMode);
 
-  const [referenceId,        setReferenceId]       = useState("");
-  const [date,               setDate]              = useState("");
-  const [numberOfRows,       setNumberOfRows]       = useState("");
-  const [plantsPerRow,       setPlantsPerRow]       = useState("");
-  const [village,            setVillage]            = useState("");
-  const [reason,             setReason]             = useState("");
-  const [waterFacility,      setWaterFacility]      = useState("");
-  const [speciesRows,        setSpeciesRows]        = useState([{ species: "", planted: "", survival: "", height: "" }]);
-  const [naturalspeciesRows, setNaturalspeciesRows] = useState([{ species: "", planted: "", survival: "", height: "" }]);
-  const [protectionRows,     setProtectionRows]     = useState([{ wallType: "", rmt: "" }]);
-  const [locations,          setLocations]          = useState([{ latitude: "", longitude: "" }]);
-  const [imageLocations,     setImageLocations]     = useState<LocationImageEntry[]>([]);
+  const [referenceId, setReferenceId] = useState("");
+  const [date, setDate] = useState("");
+  const [numberOfRows, setNumberOfRows] = useState("");
+  const [plantsPerRow, setPlantsPerRow] = useState("");
+  const [village, setVillage] = useState("");
+  const [reason, setReason] = useState("");
+  const [waterFacility, setWaterFacility] = useState("");
+  const [speciesRows, setSpeciesRows] = useState([
+    { species: "", planted: "", survival: "", height: "" },
+  ]);
+  const [naturalspeciesRows, setNaturalspeciesRows] = useState([
+    { species: "", planted: "", survival: "", height: "" },
+  ]);
+  const [protectionRows, setProtectionRows] = useState([
+    { wallType: "", rmt: "" },
+  ]);
+  const [locations, setLocations] = useState([{ latitude: "", longitude: "" }]);
+  const [imageLocations, setImageLocations] = useState<LocationImageEntry[]>(
+    [],
+  );
 
-  const [speciesList,        setSpeciesList]        = useState<any[]>([]);
+  const [speciesList, setSpeciesList] = useState<any[]>([]);
   const [naturalspeciesList, setNaturalspeciesList] = useState<any[]>([]);
-  const [villages,           setVillages]           = useState<any[]>([]);
-  const [reasonList,         setReasonList]         = useState<any[]>([]);
+  const [villages, setVillages] = useState<any[]>([]);
+  const [reasonList, setReasonList] = useState<any[]>([]);
   const [protectionWallList, setProtectionWallList] = useState<any[]>([]);
 
   const [showDatePicker, setShowDatePicker] = useState(false);
-  const [refreshing,     setRefreshing]     = useState(false);
-  const [refError,       setRefError]       = useState("");
-  const [dateError,      setDateError]      = useState("");
-  const [villageError,   setVillageError]   = useState("");
-  const [addingImage,    setAddingImage]    = useState(false);
+  const [refreshing, setRefreshing] = useState(false);
+  const [refError, setRefError] = useState("");
+  const [dateError, setDateError] = useState("");
+  const [villageError, setVillageError] = useState("");
+  const [addingImage, setAddingImage] = useState(false);
 
-  const [liveGps, setLiveGps] = useState<{ photoUri: string; latitude: string; longitude: string; accuracy: number | null; photoWidth: number; photoHeight: number; } | null>(null);
+  const [liveGps, setLiveGps] = useState<{
+    photoUri: string;
+    latitude: string;
+    longitude: string;
+    accuracy: number | null;
+    photoWidth: number;
+    photoHeight: number;
+  } | null>(null);
   const [confirming, setConfirming] = useState(false);
   const gpsWatchRef = useRef<Location.LocationSubscription | null>(null);
 
-  const [pendingWatermark, setPendingWatermark] = useState<{ uri: string; watermark: WatermarkData; lat: string; lng: string; photoWidth: number; photoHeight: number; } | null>(null);
+  const [pendingWatermark, setPendingWatermark] = useState<{
+    uri: string;
+    watermark: WatermarkData;
+    lat: string;
+    lng: string;
+    photoWidth: number;
+    photoHeight: number;
+  } | null>(null);
   const stampRef = useRef<View>(null);
 
-  const [modal, setModal] = useState<ModalState>({ visible: false, type: "info", title: "", message: "" });
-  const showModal  = (cfg: Omit<ModalState, "visible">) => setModal({ ...cfg, visible: true });
-  const closeModal = () => setModal((m) => ({ ...m, visible: false, onConfirm: undefined, onCancel: undefined }));
+  const [modal, setModal] = useState<ModalState>({
+    visible: false,
+    type: "info",
+    title: "",
+    message: "",
+  });
+  const showModal = (cfg: Omit<ModalState, "visible">) =>
+    setModal({ ...cfg, visible: true });
+  const closeModal = () =>
+    setModal((m) => ({
+      ...m,
+      visible: false,
+      onConfirm: undefined,
+      onCancel: undefined,
+    }));
 
-  const autoSaveIndexRef  = useRef<number | null>(null);
-  const savedManuallyRef  = useRef(false);
-  const createdAtRef      = useRef(new Date().toISOString());
+  const autoSaveIndexRef = useRef<number | null>(null);
+  const savedManuallyRef = useRef(false);
+  const createdAtRef = useRef(new Date().toISOString());
 
-  const refRef            = useRef(referenceId);
-  const dateRef           = useRef(date);
-  const numberOfRowsRef   = useRef(numberOfRows);
-  const plantsPerRowRef   = useRef(plantsPerRow);
-  const villageRef        = useRef(village);
-  const reasonRef         = useRef(reason);
-  const waterFacilityRef  = useRef(waterFacility);
-  const speciesRowsRef    = useRef(speciesRows);
-  const naturalRowsRef    = useRef(naturalspeciesRows);
+  const refRef = useRef(referenceId);
+  const dateRef = useRef(date);
+  const numberOfRowsRef = useRef(numberOfRows);
+  const plantsPerRowRef = useRef(plantsPerRow);
+  const villageRef = useRef(village);
+  const reasonRef = useRef(reason);
+  const waterFacilityRef = useRef(waterFacility);
+  const speciesRowsRef = useRef(speciesRows);
+  const naturalRowsRef = useRef(naturalspeciesRows);
   const protectionRowsRef = useRef(protectionRows);
-  const locationsRef      = useRef(locations);
-  const imageLocRef       = useRef(imageLocations);
+  const locationsRef = useRef(locations);
+  const imageLocRef = useRef(imageLocations);
 
-  useEffect(() => { refRef.current            = referenceId; },        [referenceId]);
-  useEffect(() => { dateRef.current           = date; },               [date]);
-  useEffect(() => { numberOfRowsRef.current   = numberOfRows; },       [numberOfRows]);
-  useEffect(() => { plantsPerRowRef.current   = plantsPerRow; },       [plantsPerRow]);
-  useEffect(() => { villageRef.current        = village; },            [village]);
-  useEffect(() => { reasonRef.current         = reason; },             [reason]);
-  useEffect(() => { waterFacilityRef.current  = waterFacility; },      [waterFacility]);
-  useEffect(() => { speciesRowsRef.current    = speciesRows; },        [speciesRows]);
-  useEffect(() => { naturalRowsRef.current    = naturalspeciesRows; }, [naturalspeciesRows]);
-  useEffect(() => { protectionRowsRef.current = protectionRows; },     [protectionRows]);
-  useEffect(() => { locationsRef.current      = locations; },          [locations]);
-  useEffect(() => { imageLocRef.current       = imageLocations; },     [imageLocations]);
+  useEffect(() => {
+    refRef.current = referenceId;
+  }, [referenceId]);
+  useEffect(() => {
+    dateRef.current = date;
+  }, [date]);
+  useEffect(() => {
+    numberOfRowsRef.current = numberOfRows;
+  }, [numberOfRows]);
+  useEffect(() => {
+    plantsPerRowRef.current = plantsPerRow;
+  }, [plantsPerRow]);
+  useEffect(() => {
+    villageRef.current = village;
+  }, [village]);
+  useEffect(() => {
+    reasonRef.current = reason;
+  }, [reason]);
+  useEffect(() => {
+    waterFacilityRef.current = waterFacility;
+  }, [waterFacility]);
+  useEffect(() => {
+    speciesRowsRef.current = speciesRows;
+  }, [speciesRows]);
+  useEffect(() => {
+    naturalRowsRef.current = naturalspeciesRows;
+  }, [naturalspeciesRows]);
+  useEffect(() => {
+    protectionRowsRef.current = protectionRows;
+  }, [protectionRows]);
+  useEffect(() => {
+    locationsRef.current = locations;
+  }, [locations]);
+  useEffect(() => {
+    imageLocRef.current = imageLocations;
+  }, [imageLocations]);
 
   const buildEntryFromRefs = (createdAt: string) => ({
-    referenceId:        refRef.current,
-    date:               dateRef.current,
-    village:            villageRef.current,
-    numberOfRows:       numberOfRowsRef.current,
-    plantsPerRow:       plantsPerRowRef.current,
-    waterFacility:      waterFacilityRef.current,
-    reason:             reasonRef.current,
-    speciesRows:        speciesRowsRef.current,
+    referenceId: refRef.current,
+    date: dateRef.current,
+    village: villageRef.current,
+    numberOfRows: numberOfRowsRef.current,
+    plantsPerRow: plantsPerRowRef.current,
+    waterFacility: waterFacilityRef.current,
+    reason: reasonRef.current,
+    speciesRows: speciesRowsRef.current,
     naturalspeciesRows: naturalRowsRef.current,
-    protectionRows:     protectionRowsRef.current,
-    locationRows:       locationsRef.current.map((e) => ({ latitude: e.latitude, longitude: e.longitude })),
-    imageLocations:     imageLocRef.current.map((e) => ({ latitude: e.latitude ?? "", longitude: e.longitude ?? "", image: e.image ?? null })),
-    images:             imageLocRef.current.filter((e) => e.image).map((e) => e.image),
+    protectionRows: protectionRowsRef.current,
+    locationRows: locationsRef.current.map((e) => ({
+      latitude: e.latitude,
+      longitude: e.longitude,
+    })),
+    imageLocations: imageLocRef.current.map((e) => ({
+      latitude: e.latitude ?? "",
+      longitude: e.longitude ?? "",
+      image: e.image ?? null,
+    })),
+    images: imageLocRef.current.filter((e) => e.image).map((e) => e.image),
     createdAt,
     [AUTO_SAVE_MARKER]: true,
   });
@@ -448,13 +762,17 @@ export default function DataEntry() {
         autoSaveIndexRef.current = existing.length;
         await saveDraft(entry);
       }
-    } catch { }
+    } catch {}
   };
 
   useEffect(() => {
-    const sub = AppState.addEventListener("change", (nextState: AppStateStatus) => {
-      if (nextState === "background" || nextState === "inactive") performAutoSave();
-    });
+    const sub = AppState.addEventListener(
+      "change",
+      (nextState: AppStateStatus) => {
+        if (nextState === "background" || nextState === "inactive")
+          performAutoSave();
+      },
+    );
     return () => sub.remove();
   }, [isEditMode]);
 
@@ -479,19 +797,34 @@ export default function DataEntry() {
     const timer = setTimeout(async () => {
       try {
         if (!stampRef.current) return;
-        const watermarkedUri = await captureRef(stampRef, { format: "jpg", quality: 0.9 });
+        const watermarkedUri = await captureRef(stampRef, {
+          format: "jpg",
+          quality: 0.9,
+        });
         await saveToGallery(watermarkedUri);
-        setImageLocations((prev) => [...prev, {
-          latitude:  pendingWatermark.lat,
-          longitude: pendingWatermark.lng,
-          image:     { uri: watermarkedUri, timestamp: pendingWatermark.watermark.timestamp },
-        }]);
+        setImageLocations((prev) => [
+          ...prev,
+          {
+            latitude: pendingWatermark.lat,
+            longitude: pendingWatermark.lng,
+            image: {
+              uri: watermarkedUri,
+              timestamp: pendingWatermark.watermark.timestamp,
+            },
+          },
+        ]);
       } catch {
-        setImageLocations((prev) => [...prev, {
-          latitude:  pendingWatermark.lat,
-          longitude: pendingWatermark.lng,
-          image:     { uri: pendingWatermark.uri, timestamp: pendingWatermark.watermark.timestamp },
-        }]);
+        setImageLocations((prev) => [
+          ...prev,
+          {
+            latitude: pendingWatermark.lat,
+            longitude: pendingWatermark.lng,
+            image: {
+              uri: pendingWatermark.uri,
+              timestamp: pendingWatermark.watermark.timestamp,
+            },
+          },
+        ]);
       } finally {
         setPendingWatermark(null);
         setConfirming(false);
@@ -507,7 +840,13 @@ export default function DataEntry() {
       try {
         const draft = await getDraftByIndex(draftIndex);
         if (!draft) {
-          showModal({ type: "error", title: "Draft Not Found", message: "This draft could not be loaded.", confirmText: "Go Back", onConfirm: () => router.back() });
+          showModal({
+            type: "error",
+            title: "Draft Not Found",
+            message: "This draft could not be loaded.",
+            confirmText: "Go Back",
+            onConfirm: () => router.back(),
+          });
           return;
         }
         setDraftData(draft);
@@ -526,7 +865,13 @@ export default function DataEntry() {
         setLocations(filled.locations);
         setImageLocations(filled.imageLocations);
       } catch {
-        showModal({ type: "error", title: "Load Error", message: "Failed to load draft data.", confirmText: "Go Back", onConfirm: () => router.back() });
+        showModal({
+          type: "error",
+          title: "Load Error",
+          message: "Failed to load draft data.",
+          confirmText: "Go Back",
+          onConfirm: () => router.back(),
+        });
       } finally {
         setDraftLoaded(true);
       }
@@ -545,10 +890,18 @@ export default function DataEntry() {
       setProtectionWallList(safeArray(data.protection_walls));
       setReasonList(safeArray(data.reasons));
       if (refresh && !silent)
-        showModal({ type: "success", title: "Data Refreshed", message: "Master data updated successfully." });
+        showModal({
+          type: "success",
+          title: "Data Refreshed",
+          message: "Master data updated successfully.",
+        });
     } catch {
       if (refresh && !silent)
-        showModal({ type: "error", title: "Refresh Failed", message: "Could not fetch latest data." });
+        showModal({
+          type: "error",
+          title: "Refresh Failed",
+          message: "Could not fetch latest data.",
+        });
     } finally {
       setRefreshing(false);
     }
@@ -563,12 +916,21 @@ export default function DataEntry() {
     init();
   }, []);
 
-  const updateLocation      = (index: number, patch: any) => setLocations((prev) => prev.map((e, i) => (i === index ? { ...e, ...patch } : e)));
-  const updateImageLocation = (index: number, patch: any) => setImageLocations((prev) => prev.map((e, i) => (i === index ? { ...e, ...patch } : e)));
+  const updateLocation = (index: number, patch: any) =>
+    setLocations((prev) =>
+      prev.map((e, i) => (i === index ? { ...e, ...patch } : e)),
+    );
+  const updateImageLocation = (index: number, patch: any) =>
+    setImageLocations((prev) =>
+      prev.map((e, i) => (i === index ? { ...e, ...patch } : e)),
+    );
 
   const onChangeDate = (event: DateTimePickerEvent, selectedDate?: Date) => {
     if (Platform.OS === "android") setShowDatePicker(false);
-    if (selectedDate) { setDate(selectedDate.toISOString().split("T")[0]); setDateError(""); }
+    if (selectedDate) {
+      setDate(selectedDate.toISOString().split("T")[0]);
+      setDateError("");
+    }
   };
 
   const pickerDate = (() => {
@@ -576,16 +938,33 @@ export default function DataEntry() {
       if (!date) return new Date();
       const d = new Date(date);
       return isNaN(d.getTime()) ? new Date() : d;
-    } catch { return new Date(); }
+    } catch {
+      return new Date();
+    }
   })();
 
   const buildLocalEntry = (createdAt: string) => ({
-    referenceId, date, village, numberOfRows, plantsPerRow,
-    speciesRows, naturalspeciesRows, protectionRows,
-    locationRows:   locations.map((e) => ({ latitude: e.latitude, longitude: e.longitude })),
-    imageLocations: imageLocations.map((e) => ({ latitude: e.latitude ?? "", longitude: e.longitude ?? "", image: e.image ?? null })),
-    images:         imageLocations.filter((e) => e.image).map((e) => e.image),
-    waterFacility, reason, createdAt,
+    referenceId,
+    date,
+    village,
+    numberOfRows,
+    plantsPerRow,
+    speciesRows,
+    naturalspeciesRows,
+    protectionRows,
+    locationRows: locations.map((e) => ({
+      latitude: e.latitude,
+      longitude: e.longitude,
+    })),
+    imageLocations: imageLocations.map((e) => ({
+      latitude: e.latitude ?? "",
+      longitude: e.longitude ?? "",
+      image: e.image ?? null,
+    })),
+    images: imageLocations.filter((e) => e.image).map((e) => e.image),
+    waterFacility,
+    reason,
+    createdAt,
   });
 
   const handleAddImageLocation = async () => {
@@ -593,36 +972,61 @@ export default function DataEntry() {
     setAddingImage(true);
     try {
       const camGranted = await requestCameraPermission();
-      if (!camGranted) { setAddingImage(false); return; }
+      if (!camGranted) {
+        setAddingImage(false);
+        return;
+      }
       const locGranted = await requestLocationPermission();
-      if (!locGranted) { setAddingImage(false); return; }
+      if (!locGranted) {
+        setAddingImage(false);
+        return;
+      }
 
       const photo = await ImagePicker.launchCameraAsync({ quality: 0.9 });
-      if (photo.canceled) { setAddingImage(false); return; }
-      if (!photo.assets || photo.assets.length === 0) { setAddingImage(false); return; }
+      if (photo.canceled) {
+        setAddingImage(false);
+        return;
+      }
+      if (!photo.assets || photo.assets.length === 0) {
+        setAddingImage(false);
+        return;
+      }
       const asset = photo.assets[0];
-      if (!asset?.uri) { setAddingImage(false); return; }
+      if (!asset?.uri) {
+        setAddingImage(false);
+        return;
+      }
 
-      const firstLoc = await Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.BestForNavigation });
+      const firstLoc = await Location.getCurrentPositionAsync({
+        accuracy: Location.Accuracy.BestForNavigation,
+      });
       setLiveGps({
-        photoUri:    asset.uri,
-        latitude:    firstLoc.coords.latitude.toFixed(6),
-        longitude:   firstLoc.coords.longitude.toFixed(6),
-        accuracy:    firstLoc.coords.accuracy,
-        photoWidth:  asset.width  ?? SCREEN_WIDTH,
+        photoUri: asset.uri,
+        latitude: firstLoc.coords.latitude.toFixed(6),
+        longitude: firstLoc.coords.longitude.toFixed(6),
+        accuracy: firstLoc.coords.accuracy,
+        photoWidth: asset.width ?? SCREEN_WIDTH,
         photoHeight: asset.height ?? Math.round(SCREEN_WIDTH * 1.33),
       });
 
       gpsWatchRef.current = await Location.watchPositionAsync(
-        { accuracy: Location.Accuracy.BestForNavigation, timeInterval: 1000, distanceInterval: 0 },
+        {
+          accuracy: Location.Accuracy.BestForNavigation,
+          timeInterval: 1000,
+          distanceInterval: 0,
+        },
         (loc) => {
-          setLiveGps((prev) => prev ? {
-            ...prev,
-            latitude:  loc.coords.latitude.toFixed(6),
-            longitude: loc.coords.longitude.toFixed(6),
-            accuracy:  loc.coords.accuracy,
-          } : prev);
-        }
+          setLiveGps((prev) =>
+            prev
+              ? {
+                  ...prev,
+                  latitude: loc.coords.latitude.toFixed(6),
+                  longitude: loc.coords.longitude.toFixed(6),
+                  accuracy: loc.coords.accuracy,
+                }
+              : prev,
+          );
+        },
       );
     } catch {
       setAddingImage(false);
@@ -637,10 +1041,15 @@ export default function DataEntry() {
     const timestamp = new Date().toISOString();
     setPendingWatermark({
       uri: liveGps.photoUri,
-      watermark: { latitude: liveGps.latitude, longitude: liveGps.longitude, timestamp, referenceId: referenceId || undefined },
+      watermark: {
+        latitude: liveGps.latitude,
+        longitude: liveGps.longitude,
+        timestamp,
+        referenceId: referenceId || undefined,
+      },
       lat: liveGps.latitude,
       lng: liveGps.longitude,
-      photoWidth:  liveGps.photoWidth,
+      photoWidth: liveGps.photoWidth,
       photoHeight: liveGps.photoHeight,
     });
     setLiveGps(null);
@@ -649,14 +1058,24 @@ export default function DataEntry() {
   const handleSaveDraft = async () => {
     if (!referenceId.trim()) {
       setRefError("Reference ID is required");
-      showModal({ type: "warning", title: "Reference ID Required", message: "Please enter a Reference ID before saving." });
+      showModal({
+        type: "warning",
+        title: "Reference ID Required",
+        message: "Please enter a Reference ID before saving.",
+      });
       return;
     }
     const entry = buildLocalEntry(draftData?.createdAt ?? createdAtRef.current);
     if (isEditMode) {
       await updateDraft(draftIndex, entry);
       savedManuallyRef.current = true;
-      showModal({ type: "success", title: "Draft Updated", message: "Your changes have been saved to drafts.", confirmText: "Go to Reports", onConfirm: () => router.replace("/drafts") });
+      showModal({
+        type: "success",
+        title: "Draft Updated",
+        message: "Your changes have been saved to drafts.",
+        confirmText: "Go to Reports",
+        onConfirm: () => router.replace("/drafts"),
+      });
     } else {
       if (autoSaveIndexRef.current !== null) {
         await updateDraft(autoSaveIndexRef.current, entry);
@@ -664,16 +1083,31 @@ export default function DataEntry() {
         await saveDraft(entry);
       }
       savedManuallyRef.current = true;
-      showModal({ type: "success", title: "Draft Saved", message: "Entry saved locally. Upload anytime from Reports.", confirmText: "Go to Dashboard", onConfirm: () => router.replace("/dashboard") });
+      showModal({
+        type: "success",
+        title: "Draft Saved",
+        message: "Entry saved locally. Upload anytime from Reports.",
+        confirmText: "Go to Dashboard",
+        onConfirm: () => router.replace("/dashboard"),
+      });
     }
   };
 
   if (!draftLoaded) {
     return (
-      <View style={{ flex: 1, justifyContent: "center", alignItems: "center", backgroundColor: "#F1F5F9" }}>
+      <View
+        style={{
+          flex: 1,
+          justifyContent: "center",
+          alignItems: "center",
+          backgroundColor: "#F1F5F9",
+        }}
+      >
         <AppModal m={modal} onClose={closeModal} />
         <MaterialCommunityIcons name="loading" size={40} color={T.primary} />
-        <Text style={{ marginTop: 12, color: "#6B7280", fontSize: 14 }}>Loading draft...</Text>
+        <Text style={{ marginTop: 12, color: "#6B7280", fontSize: 14 }}>
+          Loading draft...
+        </Text>
       </View>
     );
   }
@@ -1140,24 +1574,92 @@ export default function DataEntry() {
 }
 
 const styles = StyleSheet.create({
-  screen:       { flex: 1, backgroundColor: "#F1F5F9" },
-  pageHeader:   { paddingTop: 52, paddingBottom: 22, paddingHorizontal: 20, borderBottomLeftRadius: 24, borderBottomRightRadius: 24, overflow: "hidden" },
-  headerOrb:    { position: "absolute", width: 200, height: 200, borderRadius: 100, backgroundColor: "rgba(34,197,94,0.08)", top: -60, right: -40 },
-  backBtn:      { flexDirection: "row", alignItems: "center", marginBottom: 8, alignSelf: "flex-start" },
-  pageTitle:    { color: "#fff", fontSize: 26, fontWeight: "800" },
-  pageSubtitle: { color: "rgba(167,243,208,0.6)", fontSize: 13, marginTop: 2, marginBottom: 16 },
-  refreshBtn:   { flexDirection: "row", alignItems: "center", gap: 6, alignSelf: "flex-start", backgroundColor: "rgba(34,197,94,0.12)", paddingHorizontal: 12, paddingVertical: 7, borderRadius: 10, borderWidth: 1, borderColor: "rgba(34,197,94,0.25)" },
-  refreshText:  { color: "#22C55E", fontSize: 13, fontWeight: "600" },
-  scroll:       { padding: 16, gap: 14 },
-  card:         { backgroundColor: "#fff", borderRadius: 18, overflow: "hidden", elevation: 2, shadowColor: "#000", shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.04, shadowRadius: 8 },
-  cardBody:     { padding: 16 },
-  label:        { fontSize: 12, fontWeight: "600", color: "#374151", marginBottom: 6 },
-  req:          { color: "#EF4444" },
-  dateField:    { flexDirection: "row", alignItems: "center", height: 48, borderWidth: 1.5, borderColor: T.border, borderRadius: 12, paddingHorizontal: 14, backgroundColor: "#FAFAFA", marginBottom: 6 },
-  fieldErr:     { borderColor: "#F87171", backgroundColor: "#FEF2F2" },
-  errTxt:       { color: "#EF4444", fontSize: 11, marginBottom: 8 },
-  pickerWrap:   { width: "100%", borderWidth: 1.5, borderColor: T.border, borderRadius: 12, minHeight: 50, backgroundColor: "#FAFAFA", marginBottom: 6 },
-  picker:       { width: "100%", height: 50, color: "#111827" },
-  twoCol:       { flexDirection: "row", gap: 12 },
-  submitCard:   { backgroundColor: "#fff", borderRadius: 18, padding: 16, elevation: 2 },
+  screen: { flex: 1, backgroundColor: "#F1F5F9" },
+  pageHeader: {
+    paddingTop: 52,
+    paddingBottom: 22,
+    paddingHorizontal: 20,
+    borderBottomLeftRadius: 24,
+    borderBottomRightRadius: 24,
+    overflow: "hidden",
+  },
+  headerOrb: {
+    position: "absolute",
+    width: 200,
+    height: 200,
+    borderRadius: 100,
+    backgroundColor: "rgba(34,197,94,0.08)",
+    top: -60,
+    right: -40,
+  },
+  backBtn: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginBottom: 8,
+    alignSelf: "flex-start",
+  },
+  pageTitle: { color: "#fff", fontSize: 26, fontWeight: "800" },
+  pageSubtitle: {
+    color: "rgba(167,243,208,0.6)",
+    fontSize: 13,
+    marginTop: 2,
+    marginBottom: 16,
+  },
+  refreshBtn: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+    alignSelf: "flex-start",
+    backgroundColor: "rgba(34,197,94,0.12)",
+    paddingHorizontal: 12,
+    paddingVertical: 7,
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: "rgba(34,197,94,0.25)",
+  },
+  refreshText: { color: "#22C55E", fontSize: 13, fontWeight: "600" },
+  scroll: { padding: 16, gap: 14 },
+  card: {
+    backgroundColor: "#fff",
+    borderRadius: 18,
+    overflow: "hidden",
+    elevation: 2,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.04,
+    shadowRadius: 8,
+  },
+  cardBody: { padding: 16 },
+  label: { fontSize: 12, fontWeight: "600", color: "#374151", marginBottom: 6 },
+  req: { color: "#EF4444" },
+  dateField: {
+    flexDirection: "row",
+    alignItems: "center",
+    height: 48,
+    borderWidth: 1.5,
+    borderColor: T.border,
+    borderRadius: 12,
+    paddingHorizontal: 14,
+    backgroundColor: "#FAFAFA",
+    marginBottom: 6,
+  },
+  fieldErr: { borderColor: "#F87171", backgroundColor: "#FEF2F2" },
+  errTxt: { color: "#EF4444", fontSize: 11, marginBottom: 8 },
+  pickerWrap: {
+    width: "100%",
+    borderWidth: 1.5,
+    borderColor: T.border,
+    borderRadius: 12,
+    minHeight: 50,
+    backgroundColor: "#FAFAFA",
+    marginBottom: 6,
+  },
+  picker: { width: "100%", height: 50, color: "#111827" },
+  twoCol: { flexDirection: "row", gap: 12 },
+  submitCard: {
+    backgroundColor: "#fff",
+    borderRadius: 18,
+    padding: 16,
+    elevation: 2,
+  },
 });
