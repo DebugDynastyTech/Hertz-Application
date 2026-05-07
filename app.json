@@ -50,11 +50,9 @@
     "extra": {
       "router": {},
       "eas": {
-        "projectId": "703d77ea-431f-4a0f-8e05-ac6252d99b76"
+        "projectId": "1e55b5e2-233e-432e-95fd-76773c26bcf5"
       }
     },
-    "updates": {
-      "url": "https://u.expo.dev/703d77ea-431f-4a0f-8e05-ac6252d99b76"
-    }
+    "owner": "ond_techsol"
   }
 }
