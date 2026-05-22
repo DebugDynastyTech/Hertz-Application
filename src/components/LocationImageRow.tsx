@@ -1,3 +1,4 @@
+// src/components/LocationImageRow.tsx
 import React, { useState } from "react";
 import {
   View, Text, StyleSheet, Pressable, TextInput,
@@ -6,7 +7,10 @@ import {
 } from "react-native";
 import * as Location from "expo-location";
 import * as ImagePicker from "expo-image-picker";
+import * as MediaLibrary from "expo-media-library";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
+import { applyWatermark } from "../utils/watermarkUtils";
+import { requestCameraPermission, requestLocationPermission, requestMediaLibraryPermission } from "../utils/permissionUtils";
 
 export interface LocationImageEntry {
   latitude: string;
@@ -17,73 +21,90 @@ export interface LocationImageEntry {
 interface Props {
   entry: LocationImageEntry;
   index: number;
+  referenceId?: string;           // ← pass your report/survey ref ID here
   onLatChange: (v: string) => void;
   onLngChange: (v: string) => void;
   onImageChange: (img: { uri: string; timestamp: string } | null) => void;
   onDelete: () => void;
 }
 
-export default function LocationImageRow({ entry, index, onLatChange, onLngChange, onImageChange, onDelete }: Props) {
+export default function LocationImageRow({
+  entry, index, referenceId,
+  onLatChange, onLngChange, onImageChange, onDelete,
+}: Props) {
   const [fetchingGps, setFetchingGps] = useState(false);
-  const [capturing,   setCapturing]   = useState(false);
+  const [capturing,   setCapturing]   = useState(false);   // camera open
+  const [stamping,    setStamping]    = useState(false);   // watermark applying
   const { width } = useWindowDimensions();
   const imgSize = (width - 80) / 4;
 
-  // ── GPS ───────────────────────────────────────────────────────────────────
+  // ── GPS ─────────────────────────────────────────────────────────────────────
   const handleGps = async () => {
     if (fetchingGps) return;
     setFetchingGps(true);
     try {
-      const { status } = await Location.requestForegroundPermissionsAsync();
-      if (status !== "granted") {
-        Alert.alert("Permission Denied", "Location access is required.");
-        return;
-      }
+      const granted = await requestLocationPermission();
+      if (!granted) return;
       const loc = await Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.High });
       onLatChange(loc.coords.latitude.toFixed(6));
       onLngChange(loc.coords.longitude.toFixed(6));
     } catch {
-      Alert.alert("GPS Error", "Unable to fetch location.");
+      Alert.alert("GPS Error", "Unable to fetch location. Please try again.");
     } finally {
       setFetchingGps(false);
     }
   };
 
-  // ── Camera capture ────────────────────────────────────────────────────────
+  // ── Camera capture ───────────────────────────────────────────────────────────
   const handleCapture = async () => {
-    if (capturing) return;
+    if (capturing || stamping) return;
+
+    // 1. Camera permission
+    const camGranted = await requestCameraPermission();
+    if (!camGranted) return;
+
     setCapturing(true);
     try {
-      const perm = await ImagePicker.requestCameraPermissionsAsync();
-      if (!perm.granted) {
-        Alert.alert("Permission Required", "Camera access is needed.");
-        return;
-      }
-
-      // ── saveToPhotos: true saves photo to gallery at capture time ─────────
-      // Works in Expo Go without needing expo-media-library permission
-      const result = await ImagePicker.launchCameraAsync({
-        quality: 0.7,
-      });
-
+      const result = await ImagePicker.launchCameraAsync({ quality: 0.85 });
       if (result.canceled) return;
-
-      if (!result.assets || result.assets.length === 0) {
+      if (!result.assets?.length || !result.assets[0]?.uri) {
         Alert.alert("Camera Error", "No image was captured. Please try again.");
         return;
       }
 
-      const asset = result.assets[0];
-      if (!asset?.uri) {
-        Alert.alert("Camera Error", "Could not read the captured image. Please try again.");
-        return;
+      const rawUri   = result.assets[0].uri;
+      const capturedAt = new Date().toISOString();
+
+      setCapturing(false);   // camera closed
+      setStamping(true);     // now applying watermark
+
+      // 2. Apply watermark stamp
+      const stampedUri = await applyWatermark(rawUri, {
+        latitude:    entry.latitude  || "N/A",
+        longitude:   entry.longitude || "N/A",
+        timestamp:   capturedAt,
+        referenceId: referenceId,
+      });
+
+      // 3. Save stamped photo to gallery
+      const mediaGranted = await requestMediaLibraryPermission();
+      if (mediaGranted) {
+        try {
+          await MediaLibrary.saveToLibraryAsync(stampedUri);
+        } catch (saveErr) {
+          console.warn("[LocationImageRow] gallery save failed:", saveErr);
+          // Non-fatal — we still store the image in app state
+        }
       }
 
-      onImageChange({ uri: asset.uri, timestamp: new Date().toISOString() });
-    } catch {
+      // 4. Update parent state
+      onImageChange({ uri: stampedUri, timestamp: capturedAt });
+    } catch (err) {
+      console.error("[LocationImageRow] capture error:", err);
       Alert.alert("Camera Error", "Something went wrong while capturing. Please try again.");
     } finally {
       setCapturing(false);
+      setStamping(false);
     }
   };
 
@@ -95,11 +116,12 @@ export default function LocationImageRow({ entry, index, onLatChange, onLngChang
   };
 
   // ── Safe image uri ────────────────────────────────────────────────────────
-  const safeImageUri: string | null = (() => {
-    if (!entry.image) return null;
-    if (typeof entry.image.uri === "string" && entry.image.uri.length > 0) return entry.image.uri;
-    return null;
-  })();
+  const safeImageUri: string | null =
+    entry.image?.uri ? entry.image.uri : null;
+
+  // ── Loading label ─────────────────────────────────────────────────────────
+  const busyLabel = capturing ? "Opening Camera…" : stamping ? "Applying Stamp…" : "Capture Photo";
+  const isBusy    = capturing || stamping;
 
   return (
     <View style={styles.container}>
@@ -113,7 +135,7 @@ export default function LocationImageRow({ entry, index, onLatChange, onLngChang
         </Pressable>
       </View>
 
-      {/* Coordinates — read only, GPS fills them */}
+      {/* Coordinates */}
       <View style={styles.coordRow}>
         <View style={styles.coordField}>
           <Text style={styles.label}>Latitude</Text>
@@ -121,7 +143,7 @@ export default function LocationImageRow({ entry, index, onLatChange, onLngChang
             style={styles.input}
             value={fetchingGps ? "" : entry.latitude}
             onChangeText={onLatChange}
-            placeholder={fetchingGps ? "Fetching..." : "0.000000"}
+            placeholder={fetchingGps ? "Fetching…" : "0.000000"}
             placeholderTextColor={fetchingGps ? "#16A34A" : "#9CA3AF"}
             editable={false}
             keyboardType="decimal-pad"
@@ -133,7 +155,7 @@ export default function LocationImageRow({ entry, index, onLatChange, onLngChang
             style={styles.input}
             value={fetchingGps ? "" : entry.longitude}
             onChangeText={onLngChange}
-            placeholder={fetchingGps ? "Fetching..." : "0.000000"}
+            placeholder={fetchingGps ? "Fetching…" : "0.000000"}
             placeholderTextColor={fetchingGps ? "#16A34A" : "#9CA3AF"}
             editable={false}
             keyboardType="decimal-pad"
@@ -161,36 +183,46 @@ export default function LocationImageRow({ entry, index, onLatChange, onLngChang
         <View style={styles.imageWrap}>
           <Image
             source={{ uri: safeImageUri }}
-            style={[styles.image, { width: imgSize * 2, height: imgSize * 2 }]}
+            style={[styles.image, { width: imgSize * 2.4, height: imgSize * 2.4 }]}
+            resizeMode="cover"
           />
+          {/* Stamping overlay — shown while re-stamping on retake */}
+          {stamping && (
+            <View style={styles.stampingOverlay}>
+              <ActivityIndicator size="large" color="#fff" />
+              <Text style={styles.stampingText}>Applying stamp…</Text>
+            </View>
+          )}
           <TouchableOpacity style={styles.removeImg} onPress={handleRemoveImage}>
             <MaterialCommunityIcons name="close" size={13} color="#fff" />
           </TouchableOpacity>
           <TouchableOpacity
-            style={[styles.retakeBtn, capturing && styles.retakeBtnDisabled]}
+            style={[styles.retakeBtn, isBusy && styles.retakeBtnDisabled]}
             onPress={handleCapture}
-            disabled={capturing}
+            disabled={isBusy}
             activeOpacity={0.85}
           >
-            {capturing
+            {isBusy
               ? <ActivityIndicator size="small" color="#16A34A" />
               : <MaterialCommunityIcons name="camera-retake-outline" size={14} color="#16A34A" />
             }
-            <Text style={styles.retakeText}>{capturing ? "Opening..." : "Retake"}</Text>
+            <Text style={styles.retakeText}>
+              {stamping ? "Stamping…" : capturing ? "Opening…" : "Retake"}
+            </Text>
           </TouchableOpacity>
         </View>
       ) : (
         <TouchableOpacity
-          style={[styles.captureBtn, capturing && styles.captureBtnDisabled]}
+          style={[styles.captureBtn, isBusy && styles.captureBtnDisabled]}
           onPress={handleCapture}
-          disabled={capturing}
+          disabled={isBusy}
           activeOpacity={0.85}
         >
-          {capturing
+          {isBusy
             ? <ActivityIndicator size="small" color="#16A34A" />
             : <MaterialCommunityIcons name="camera-outline" size={20} color="#16A34A" />
           }
-          <Text style={styles.captureBtnText}>{capturing ? "Opening Camera..." : "Capture Photo"}</Text>
+          <Text style={styles.captureBtnText}>{busyLabel}</Text>
         </TouchableOpacity>
       )}
     </View>
@@ -213,6 +245,8 @@ const styles = StyleSheet.create({
   gpsBtnActive:       { backgroundColor: "#86EFAC" },
   imageWrap:          { position: "relative", alignSelf: "flex-start", marginTop: 4 },
   image:              { borderRadius: 10 },
+  stampingOverlay:    { ...StyleSheet.absoluteFillObject, borderRadius: 10, backgroundColor: "rgba(0,0,0,0.45)", justifyContent: "center", alignItems: "center", gap: 8 },
+  stampingText:       { color: "#fff", fontSize: 13, fontWeight: "600" },
   removeImg:          { position: "absolute", top: 4, right: 4, width: 22, height: 22, borderRadius: 11, backgroundColor: "rgba(0,0,0,0.55)", justifyContent: "center", alignItems: "center" },
   retakeBtn:          { flexDirection: "row", alignItems: "center", gap: 4, marginTop: 8 },
   retakeBtnDisabled:  { opacity: 0.5 },
