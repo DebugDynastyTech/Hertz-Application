@@ -3,6 +3,7 @@ import DateTimePicker, {
   DateTimePickerEvent,
 } from "@react-native-community/datetimepicker";
 import { Picker } from "@react-native-picker/picker";
+import * as ImageManipulator from "expo-image-manipulator";
 import * as ImagePicker from "expo-image-picker";
 import { LinearGradient } from "expo-linear-gradient";
 import * as Location from "expo-location";
@@ -295,12 +296,19 @@ function getAccuracyLabel(accuracy: number | null): string {
 
 // ── Live GPS Card ─────────────────────────────────────────────────────────────
 interface LiveGpsCardProps {
-  photoUri: string;
+  /** Optional — when present, shows the photo preview above the coords. */
+  photoUri?: string;
   latitude: string;
   longitude: string;
   accuracy: number | null;
   onConfirm: () => void;
+  /** Optional — when present, shows a Cancel button next to Confirm. */
+  onCancel?: () => void;
   confirming: boolean;
+  /** Optional — header title. Defaults to "Live GPS — Select Location". */
+  title?: string;
+  /** Optional — confirm button label. Defaults to "Use This Location". */
+  confirmLabel?: string;
 }
 
 function LiveGpsCard({
@@ -309,19 +317,27 @@ function LiveGpsCard({
   longitude,
   accuracy,
   onConfirm,
+  onCancel,
   confirming,
+  title,
+  confirmLabel,
 }: LiveGpsCardProps) {
   const color = getAccuracyColor(accuracy);
   const label = getAccuracyLabel(accuracy);
   return (
     <View style={gps.card}>
-      <SectionHeader icon="crosshairs-gps" title="Live GPS — Select Location" />
+      <SectionHeader
+        icon="crosshairs-gps"
+        title={title ?? "Live GPS — Select Location"}
+      />
       <View style={gps.body}>
-        <Image
-          source={{ uri: photoUri }}
-          style={gps.preview}
-          resizeMode="cover"
-        />
+        {photoUri ? (
+          <Image
+            source={{ uri: photoUri }}
+            style={gps.preview}
+            resizeMode="cover"
+          />
+        ) : null}
         <View style={[gps.accuracyRow, { borderColor: color }]}>
           <View style={[gps.accuracyDot, { backgroundColor: color }]} />
           <View style={{ flex: 1 }}>
@@ -356,25 +372,39 @@ function LiveGpsCard({
             ? "✅ Good accuracy — you can save now."
             : "⏳ Waiting for better accuracy... or save now if acceptable."}
         </Text>
-        <TouchableOpacity
-          style={[
-            gps.confirmBtn,
-            { backgroundColor: color },
-            confirming && { opacity: 0.7 },
-          ]}
-          onPress={onConfirm}
-          disabled={confirming || latitude === ""}
-          activeOpacity={0.85}
-        >
-          <MaterialCommunityIcons
-            name="map-marker-check"
-            size={18}
-            color="#fff"
-          />
-          <Text style={gps.confirmBtnText}>
-            {confirming ? "Saving..." : "Use This Location"}
-          </Text>
-        </TouchableOpacity>
+        <View style={gps.actionRow}>
+          {onCancel ? (
+            <TouchableOpacity
+              style={gps.cancelBtn}
+              onPress={onCancel}
+              disabled={confirming}
+              activeOpacity={0.85}
+            >
+              <MaterialCommunityIcons name="close" size={16} color="#374151" />
+              <Text style={gps.cancelBtnText}>Cancel</Text>
+            </TouchableOpacity>
+          ) : null}
+          <TouchableOpacity
+            style={[
+              gps.confirmBtn,
+              { backgroundColor: color },
+              confirming && { opacity: 0.7 },
+              onCancel ? { flex: 1 } : null,
+            ]}
+            onPress={onConfirm}
+            disabled={confirming || latitude === ""}
+            activeOpacity={0.85}
+          >
+            <MaterialCommunityIcons
+              name="map-marker-check"
+              size={18}
+              color="#fff"
+            />
+            <Text style={gps.confirmBtnText}>
+              {confirming ? "Saving..." : (confirmLabel ?? "Use This Location")}
+            </Text>
+          </TouchableOpacity>
+        </View>
       </View>
     </View>
   );
@@ -431,6 +461,11 @@ const gps = StyleSheet.create({
   },
   coordValue: { fontSize: 13, color: "#111827", fontWeight: "700" },
   hint: { fontSize: 12, color: "#6B7280", textAlign: "center", lineHeight: 18 },
+  actionRow: {
+    flexDirection: "row",
+    gap: 10,
+    alignItems: "stretch",
+  },
   confirmBtn: {
     flexDirection: "row",
     alignItems: "center",
@@ -438,8 +473,22 @@ const gps = StyleSheet.create({
     gap: 8,
     paddingVertical: 14,
     borderRadius: 12,
+    flex: 1,
   },
   confirmBtnText: { color: "#fff", fontWeight: "700", fontSize: 15 },
+  cancelBtn: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 6,
+    paddingVertical: 14,
+    paddingHorizontal: 18,
+    borderRadius: 12,
+    backgroundColor: "#F3F4F6",
+    borderWidth: 1,
+    borderColor: "#E5E7EB",
+  },
+  cancelBtnText: { color: "#374151", fontWeight: "700", fontSize: 14 },
 });
 
 // ── Safe helpers ──────────────────────────────────────────────────────────────
@@ -520,6 +569,7 @@ interface StampViewProps {
   watermark: WatermarkData;
   photoWidth: number;
   photoHeight: number;
+  onImageReady?: () => void;
 }
 function StampView({
   uri,
@@ -527,14 +577,35 @@ function StampView({
   watermark,
   photoWidth,
   photoHeight,
+  onImageReady,
 }: StampViewProps) {
   // Use real photo dimensions to preserve landscape/portrait orientation
-  const aspectRatio = photoHeight > 0 ? photoHeight / photoWidth : 1.33;
+  const aspectRatio =
+    photoWidth > 0 && photoHeight > 0 ? photoHeight / photoWidth : 1.33;
   const W = SCREEN_WIDTH;
   const H = Math.round(W * aspectRatio);
   const lines = buildStampLines(watermark);
-  const fontSize = Math.max(13, Math.round(W * 0.032));
-  const pad = Math.max(10, Math.round(W * 0.025));
+
+  // ── Orientation-aware sizing ────────────────────────────────────────────
+  // Landscape photos are visually shorter, so even a moderate stamp covers
+  // a big chunk of the picture. Landscape gets MUCH tighter font, padding,
+  // and width cap than portrait — barely visible but still readable.
+  const isLandscape = W > H;
+  const shortSide = Math.min(W, H);
+
+  // Font: landscape uses a smaller floor + smaller scale factor
+  const fontSize = isLandscape
+    ? Math.max(8, Math.round(shortSide * 0.013))
+    : Math.max(10, Math.round(shortSide * 0.016));
+
+  // Padding: tighter on landscape
+  const pad = isLandscape
+    ? Math.max(3, Math.round(shortSide * 0.007))
+    : Math.max(5, Math.round(shortSide * 0.010));
+
+  // Width cap: landscape much narrower
+  const maxWidthPct = isLandscape ? "32%" : "55%";
+
   return (
     <View
       ref={stampRef}
@@ -544,24 +615,33 @@ function StampView({
         top: 0,
         width: W,
         height: H,
-        backgroundColor: "#000",
+        // Neutral background — if capture ever fires before the Image is fully
+        // opaque, residual fade pixels composite to white instead of black,
+        // avoiding a visible darkening of the photo.
+        backgroundColor: "#fff",
       }}
       collapsable={false}
     >
       <Image
         source={{ uri }}
         style={{ width: W, height: H, resizeMode: "cover" }}
+        // Android Image has a 300ms fade-in by default. Without disabling it,
+        // captureRef can fire mid-fade and capture a partially-transparent
+        // photo blended against the View's background — that's why captured
+        // photos came out visibly darker on some phones.
+        fadeDuration={0}
+        onLoadEnd={onImageReady}
       />
       <View
         style={{
           position: "absolute",
           bottom: pad,
           left: pad,
-          maxWidth: "75%", // 👈 LIMIT WIDTH
+          maxWidth: maxWidthPct,
           backgroundColor: "rgba(0,0,0,0.55)",
-          paddingHorizontal: pad,
+          paddingHorizontal: Math.round(pad * 1.4),
           paddingVertical: Math.round(pad * 0.7),
-          borderRadius: 10,
+          borderRadius: 5,
           alignSelf: "flex-start",
         }}
       >
@@ -572,8 +652,8 @@ function StampView({
               color: "#fff",
               fontSize,
               fontWeight: "600",
-              letterSpacing: 0.3,
-              lineHeight: fontSize * 1.6,
+              letterSpacing: 0.15,
+              lineHeight: Math.round(fontSize * 1.25),
             }}
           >
             {line}
@@ -644,6 +724,24 @@ export default function DataEntry() {
   const [confirming, setConfirming] = useState(false);
   const gpsWatchRef = useRef<Location.LocationSubscription | null>(null);
 
+  // ── Location-row Live GPS (separate from image-capture GPS) ─────────────────
+  // Same UX as the image flow: live accuracy, "Use This Location" confirms,
+  // Cancel discards. `index` tells us which row to fill on confirm.
+  const [liveGpsForLocation, setLiveGpsForLocation] = useState<{
+    index: number;
+    latitude: string;
+    longitude: string;
+    accuracy: number | null;
+  } | null>(null);
+  // Index of the row whose GPS button was just tapped but hasn't received its
+  // first fix yet. Drives the spinner on the GPS icon during that wait.
+  const [startingLocationGpsIndex, setStartingLocationGpsIndex] = useState<
+    number | null
+  >(null);
+  const locationGpsWatchRef = useRef<Location.LocationSubscription | null>(
+    null,
+  );
+
   const [pendingWatermark, setPendingWatermark] = useState<{
     uri: string;
     watermark: WatermarkData;
@@ -652,6 +750,7 @@ export default function DataEntry() {
     photoWidth: number;
     photoHeight: number;
   } | null>(null);
+  const [stampImageReady, setStampImageReady] = useState(false);
   const stampRef = useRef<View>(null);
 
   const [modal, setModal] = useState<ModalState>({
@@ -789,17 +888,30 @@ export default function DataEntry() {
     return () => {
       performAutoSave();
       gpsWatchRef.current?.remove();
+      locationGpsWatchRef.current?.remove();
     };
   }, [isEditMode]);
 
   useEffect(() => {
+    // Reset the readiness flag whenever a new watermark job starts so the
+    // capture effect below waits for the fresh Image to finish loading.
+    if (pendingWatermark) setStampImageReady(false);
+  }, [pendingWatermark]);
+
+  useEffect(() => {
     if (!pendingWatermark) return;
+    // Wait for the off-screen Image to actually finish decoding before
+    // capturing — otherwise captureRef snapshots a blank/partial frame and
+    // the JPEG comes out dark. The Image's onLoadEnd flips stampImageReady.
+    // A small additional buffer ensures the next render commit is on screen.
+    // Fallback timeout guards against rare cases where onLoadEnd never fires.
+    const delay = stampImageReady ? 120 : 1500;
     const timer = setTimeout(async () => {
       try {
         if (!stampRef.current) return;
         const watermarkedUri = await captureRef(stampRef, {
           format: "jpg",
-          quality: 0.9,
+          quality: 1,
         });
         await saveToGallery(watermarkedUri);
         setImageLocations((prev) => [
@@ -830,9 +942,9 @@ export default function DataEntry() {
         setConfirming(false);
         setAddingImage(false);
       }
-    }, 300);
+    }, delay);
     return () => clearTimeout(timer);
-  }, [pendingWatermark]);
+  }, [pendingWatermark, stampImageReady]);
 
   useEffect(() => {
     if (!isEditMode) return;
@@ -920,10 +1032,6 @@ export default function DataEntry() {
     setLocations((prev) =>
       prev.map((e, i) => (i === index ? { ...e, ...patch } : e)),
     );
-  const updateImageLocation = (index: number, patch: any) =>
-    setImageLocations((prev) =>
-      prev.map((e, i) => (i === index ? { ...e, ...patch } : e)),
-    );
 
   const onChangeDate = (event: DateTimePickerEvent, selectedDate?: Date) => {
     if (Platform.OS === "android") setShowDatePicker(false);
@@ -982,7 +1090,7 @@ export default function DataEntry() {
         return;
       }
 
-      const photo = await ImagePicker.launchCameraAsync({ quality: 0.9 });
+      const photo = await ImagePicker.launchCameraAsync({ quality: 1 });
       if (photo.canceled) {
         setAddingImage(false);
         return;
@@ -1033,14 +1141,53 @@ export default function DataEntry() {
     }
   };
 
-  const handleConfirmLocation = () => {
+  const handleConfirmLocation = async () => {
     if (!liveGps || confirming) return;
     setConfirming(true);
     gpsWatchRef.current?.remove();
     gpsWatchRef.current = null;
+
     const timestamp = new Date().toISOString();
+
+    // ── Normalize source photo before stamping ────────────────────────────
+    // ALWAYS re-encode through ImageManipulator (not just when resizing).
+    // This forces every phone through the same Bitmap decode → JPEG encode
+    // pipeline, which:
+    //   • Bakes EXIF rotation into actual pixels (fixes rotated/cropped
+    //     output on some Android phones).
+    //   • Flattens HDR / Ultra HDR gain maps consistently. Without this,
+    //     RN's <Image> on phones with Ultra HDR JPEGs (recent Pixel/Samsung
+    //     flagships) renders only the dark SDR baseline, which then gets
+    //     captured by view-shot — that's the cross-phone darkness symptom.
+    //   • Caps very large photos at 1920w so the off-screen view stays
+    //     within reasonable memory and the watermark text is captured
+    //     cleanly. compress: 1.0 minimises re-encode brightness loss.
+    let normalizedUri = liveGps.photoUri;
+    let normalizedW = liveGps.photoWidth;
+    let normalizedH = liveGps.photoHeight;
+    try {
+      const TARGET_W = 1920;
+      const ops =
+        liveGps.photoWidth > TARGET_W
+          ? [{ resize: { width: TARGET_W } }]
+          : [];
+      const normalized = await ImageManipulator.manipulateAsync(
+        liveGps.photoUri,
+        ops,
+        {
+          format: ImageManipulator.SaveFormat.JPEG,
+          compress: 1,
+        },
+      );
+      normalizedUri = normalized.uri;
+      normalizedW = normalized.width;
+      normalizedH = normalized.height;
+    } catch {
+      // Normalization is best-effort — fall back to the raw photo.
+    }
+
     setPendingWatermark({
-      uri: liveGps.photoUri,
+      uri: normalizedUri,
       watermark: {
         latitude: liveGps.latitude,
         longitude: liveGps.longitude,
@@ -1049,10 +1196,88 @@ export default function DataEntry() {
       },
       lat: liveGps.latitude,
       lng: liveGps.longitude,
-      photoWidth: liveGps.photoWidth,
-      photoHeight: liveGps.photoHeight,
+      photoWidth: normalizedW,
+      photoHeight: normalizedH,
     });
     setLiveGps(null);
+  };
+
+  // ── Location-row Live GPS handlers ────────────────────────────────────────
+  // Mirror the image-capture flow's "watch until accuracy is acceptable, then
+  // confirm" pattern, but for plain lat/long rows (no photo). Works in both
+  // new-entry and edit mode — on confirm we just write into `locations[index]`.
+  const stopLocationGpsWatch = () => {
+    locationGpsWatchRef.current?.remove();
+    locationGpsWatchRef.current = null;
+  };
+
+  const handleStartLocationGps = async (index: number) => {
+    // Only one Live GPS flow may run at a time.
+    if (
+      liveGps ||
+      addingImage ||
+      liveGpsForLocation ||
+      startingLocationGpsIndex !== null
+    )
+      return;
+
+    setStartingLocationGpsIndex(index);
+
+    const granted = await requestLocationPermission();
+    if (!granted) {
+      setStartingLocationGpsIndex(null);
+      return;
+    }
+
+    try {
+      const firstLoc = await Location.getCurrentPositionAsync({
+        accuracy: Location.Accuracy.BestForNavigation,
+      });
+      setLiveGpsForLocation({
+        index,
+        latitude: firstLoc.coords.latitude.toFixed(6),
+        longitude: firstLoc.coords.longitude.toFixed(6),
+        accuracy: firstLoc.coords.accuracy,
+      });
+      setStartingLocationGpsIndex(null);
+
+      locationGpsWatchRef.current = await Location.watchPositionAsync(
+        {
+          accuracy: Location.Accuracy.BestForNavigation,
+          timeInterval: 1000,
+          distanceInterval: 0,
+        },
+        (loc) => {
+          setLiveGpsForLocation((prev) =>
+            prev
+              ? {
+                  ...prev,
+                  latitude: loc.coords.latitude.toFixed(6),
+                  longitude: loc.coords.longitude.toFixed(6),
+                  accuracy: loc.coords.accuracy,
+                }
+              : prev,
+          );
+        },
+      );
+    } catch {
+      stopLocationGpsWatch();
+      setLiveGpsForLocation(null);
+      setStartingLocationGpsIndex(null);
+    }
+  };
+
+  const handleConfirmLocationGps = () => {
+    if (!liveGpsForLocation) return;
+    const { index, latitude, longitude } = liveGpsForLocation;
+    stopLocationGpsWatch();
+    updateLocation(index, { latitude, longitude });
+    setLiveGpsForLocation(null);
+  };
+
+  const handleCancelLocationGps = () => {
+    stopLocationGpsWatch();
+    setLiveGpsForLocation(null);
   };
 
   const handleSaveDraft = async () => {
@@ -1124,6 +1349,7 @@ export default function DataEntry() {
           watermark={pendingWatermark.watermark}
           photoWidth={pendingWatermark.photoWidth}
           photoHeight={pendingWatermark.photoHeight}
+          onImageReady={() => setStampImageReady(true)}
         />
       )}
 
@@ -1484,19 +1710,43 @@ export default function DataEntry() {
           <View style={styles.card}>
             <SectionHeader icon="map-marker" title="Locations" />
             <View style={styles.cardBody}>
-              {locations.map((loc, i) => (
-                <LocationRow
-                  key={i}
-                  index={i}
-                  latitude={loc.latitude}
-                  longitude={loc.longitude}
-                  onLatitudeChange={(v) => updateLocation(i, { latitude: v })}
-                  onLongitudeChange={(v) => updateLocation(i, { longitude: v })}
-                  onDelete={() =>
-                    setLocations((prev) => prev.filter((_, idx) => idx !== i))
-                  }
-                />
-              ))}
+              {locations.map((loc, i) => {
+                const isActive = liveGpsForLocation?.index === i;
+                const isStarting = startingLocationGpsIndex === i;
+                return (
+                  <LocationRow
+                    key={i}
+                    index={i}
+                    latitude={loc.latitude}
+                    longitude={loc.longitude}
+                    onLatitudeChange={(v) =>
+                      updateLocation(i, { latitude: v })
+                    }
+                    onLongitudeChange={(v) =>
+                      updateLocation(i, { longitude: v })
+                    }
+                    onDelete={() =>
+                      setLocations((prev) => prev.filter((_, idx) => idx !== i))
+                    }
+                    onStartGps={() => handleStartLocationGps(i)}
+                    gpsActive={isActive}
+                    gpsStarting={isStarting}
+                    gpsDisabled={
+                      !!liveGps ||
+                      addingImage ||
+                      (liveGpsForLocation !== null && !isActive) ||
+                      (startingLocationGpsIndex !== null && !isStarting)
+                    }
+                    liveLatitude={isActive ? liveGpsForLocation?.latitude : ""}
+                    liveLongitude={
+                      isActive ? liveGpsForLocation?.longitude : ""
+                    }
+                    liveAccuracy={isActive ? liveGpsForLocation?.accuracy : null}
+                    onConfirmGps={handleConfirmLocationGps}
+                    onCancelGps={handleCancelLocationGps}
+                  />
+                );
+              })}
               <PrimaryButton
                 title="+ Add Location"
                 variant="outline"
@@ -1521,11 +1771,6 @@ export default function DataEntry() {
                   key={i}
                   entry={entry}
                   index={i}
-                  onLatChange={(v) => updateImageLocation(i, { latitude: v })}
-                  onLngChange={(v) => updateImageLocation(i, { longitude: v })}
-                  onImageChange={(img) =>
-                    updateImageLocation(i, { image: img })
-                  }
                   onDelete={() =>
                     setImageLocations((prev) =>
                       prev.filter((_, idx) => idx !== i),
@@ -1546,7 +1791,7 @@ export default function DataEntry() {
             </View>
           </View>
 
-          {/* Live GPS Card */}
+          {/* Live GPS Card — image capture flow */}
           {liveGps && (
             <LiveGpsCard
               photoUri={liveGps.photoUri}

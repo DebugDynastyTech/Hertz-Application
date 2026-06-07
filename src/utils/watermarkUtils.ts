@@ -122,6 +122,24 @@ function escapeXml(str: string): string {
 }
 
 // ── Main export: applyWatermark ───────────────────────────────────────────────
+//
+// ⚠️ NOT USED by the production capture flow. The active path is
+// app/data-entry.tsx → StampView → captureRef (view-shot). Keep that the
+// only path users can hit, so the "photo comes out darker on some phones"
+// regression doesn't sneak back in.
+//
+// Known darkening hazards in THIS implementation if you re-enable it:
+//   1. The HTML wrapper sets `background:#000`, which composites against
+//      any non-opaque Image edge → dark border / vignette.
+//   2. Photo → base64 → SVG <image> → expo-print PDF → ImageManipulator
+//      JPEG is a 4-stage round-trip; each Bitmap decode strips the Ultra
+//      HDR gain map (Pixel / recent Samsung etc.), producing the dark SDR
+//      baseline.
+//   3. Final `compress: 0.88` re-encodes one more time.
+//
+// If you ever wire this back in, at minimum: change the HTML background to
+// white, drop the final re-compress (use 1.0), and verify on an Ultra HDR
+// phone before shipping.
 export async function applyWatermark(
   imageUri: string,
   data: WatermarkData
